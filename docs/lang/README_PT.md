@@ -23,6 +23,8 @@
 
 </div>
 
+> ⚠️ Esta tradução pode estar desatualizada. As seções de autoavaliação para o catálogo (Compatibilidade, Início rápido, Configuração, Permissões e dados, Solução de problemas, Segurança) seguem a [versão em inglês](../README.md).
+
 ---
 
 > 🆕 **2026-08-14 · v0.3.0** — A edição de notas na interface chegou: clique em **Editar notas** em qualquer cartão para renomear um plugin ou reescrever sua descrição sem tocar no `catalog.json`.

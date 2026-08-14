@@ -1,4 +1,4 @@
-<!-- 中文文档。English README: README.md -->
+<!-- 中文文档。English README: ../README.md -->
 <div align="center">
 
 # dsh-plugin-manager（插件管家）
@@ -20,7 +20,7 @@
 
 <br>
 
-[为什么需要](#为什么需要它) · [安装](#安装) · [功能](#功能) · [工作原理](#工作原理) · [自定义备注](#自定义备注) · [测试](#测试)
+[概述](#概述) · [兼容性](#兼容性) · [安装与卸载](#安装与卸载) · [快速上手](#快速上手) · [配置](#配置) · [权限与数据](#权限与数据) · [功能](#功能) · [故障排查](#故障排查) · [开发](#开发)
 
 [**English**](../README.md) · [**Español**](README_ES.md) · [**日本語**](README_JA.md) · [**Deutsch**](README_DE.md) · [**Русский**](README_RU.md) · [**Português**](README_PT.md) · [**한국어**](README_KO.md)
 
@@ -34,7 +34,11 @@
 
 ---
 
-## 为什么需要它
+## 概述
+
+**解决什么问题**：DSH 内置「插件列表」只有英文模块名、没有说明，插件装多了不知道各自是做什么的；启停只能手工编辑 cordis.patch.yml，容易改错。
+
+**适合谁**：所有 DeepSeek Harness 用户，尤其是安装了大量插件、想搞清楚每个插件用途并安全启停的人。
 
 | 痛点 | 之前 | 用了插件管家之后 |
 |------|------|------------------|
@@ -43,23 +47,73 @@
 | 没收录的插件永远神秘 | 只有兜底文案 | 界面里直接补说明 |
 | 手滑就出事 | 任何行都能被停用 | 系统行锁定，!!js 表达式行标注禁改 |
 
-## 安装
+## 兼容性
+
+| 项目 | 说明 |
+|------|------|
+| DSH 版本 | **0.1.0-rc.5**（官方安装包，resources/harness 内置源码树） |
+| 验证时间 | **2026-08-14**，web profile，Windows |
+| 安装机制 | `dsh plugin --profile web add`（bundle 补丁 + 双面行） |
+| 依赖的内置行 | dsh-base + dsh-web-app 自带的 typert-loader / api-gateway / client-modules |
+
+> 官方启动器以 tsx 源码模式启动；本插件的 ./typert 严格注册专门兼容普通 node 与 tsx 源码两种启动模式（tests/claims.e2e.mjs 覆盖）。如果你使用其它 DSH 版本，请先跑一遍测试再报问题。
+
+## 安装与卸载
 
 ```bash
-# 方式一：从 GitHub 安装（推荐，与 dsh-navbar 相同的 bundle 机制）
+# 安装（推荐，与 dsh-navbar 相同的 bundle 机制）
 dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 
-# 方式二：从 zip 包安装（下载 Release 里的 zip）
-# 解压到无空格路径后：
+# 备选：从 zip 包安装（下载 Release 里的 zip），解压到无空格路径后：
 dsh plugin --profile web add file:/<解压目录>/dsh-plugin-manager
 
-# 方式三：本地构建安装（克隆本仓库）
+# 备选：本地构建安装（克隆本仓库）
 pnpm build   # tsc + tsdown，产出 lib/index.js（主机半）与 lib/client.js（浏览器半）
 dsh plugin --profile web add file:./dsh-plugin-manager
 ```
 
-> 装完**重启 DeepSeek Harness**，页面按一次 **Ctrl+F5**，打开 设置 → 插件 → 「插件管家」。
-> 仓库已提交 lib/ 构建产物，GitHub 安装无需本地构建。
+> 装完**重启 DeepSeek Harness**，页面按一次 **Ctrl+F5**，打开 设置 → 插件 → 「插件管家」。仓库已提交 lib/ 构建产物，GitHub 安装无需本地构建。
+
+| 操作 | 命令 |
+|------|------|
+| 升级 | `dsh plugin --profile web update`（或重新执行 add 命令），然后重启 DSH |
+| 临时禁用 | 在插件管家自己的卡片上点「停用」——行仍在，随时可重新启用 |
+| 彻底移除 | `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`，若补丁文件中有它写入的行块则一并删除 |
+
+## 快速上手
+
+最小可复现流程（约 2 分钟）：
+
+```bash
+# 1. 安装
+dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
+# 2. 重启 DeepSeek Harness，网页按一次 Ctrl+F5
+```
+
+3. 打开 **设置 → 插件 → 插件管家** —— 看到带中文名和说明的完整目录。
+4. 启停一个插件：搜索 `trajectory`，在「轨迹视图」卡片点「停用」→ 约 1 秒后变为「已停用」（主机侧即时生效；浏览器端插件刷新页面后完全卸载）。
+5. 备注一个插件：点「联网搜索」卡片的「编辑备注」，改名并补充说明，点「保存」→ 卡片立即更新；「恢复默认」可还原。
+
+## 配置
+
+| 项目 | 说明 |
+|------|------|
+| 插件级配置项 | 无 —— 开箱即用，无需任何配置 |
+| 启停补丁文件 | `~/.dsh/cordis.patch.yml`（全局层，DSH 实时热加载） |
+| 备注覆盖文件 | `~/.dsh/plugin-manager/catalog.json`（首次保存时自动创建） |
+| 环境变量 | 无自有环境变量；文件位置遵循 DSH 的 `DSH_HOME` 约定 |
+| 默认值 | 未收录插件：内置目录 → 英文短名 → 兜底文案 |
+| 敏感项 | 无 —— 不读取、不存储任何密钥/token/凭据 |
+
+## 权限与数据
+
+| 范围 | 涉及内容 |
+|------|----------|
+| 读取文件 | `cordis.patch.yml`、`plugin-manager/catalog.json`、进程内插件清单 |
+| 写入文件 | 仅 DSH 目录内的 `~/.dsh/cordis.patch.yml`（启停行）与 `~/.dsh/plugin-manager/catalog.json`（备注） |
+| 网络 | 无外网访问；浏览器半仅与本地 DSH 的 `/api` RPC 端点通信 |
+| 凭据 | 从不读取 |
+| 用户数据 | 从不读取（不接触会话、消息、提示词） |
 
 ## 功能
 
@@ -93,6 +147,18 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 
 覆盖优先级：覆盖文件 > 内置目录 > 英文短名。
 
+## 故障排查
+
+| 症状 | 处理 |
+|------|------|
+| 标签页不出现 | 重启 DeepSeek Harness，再 Ctrl+F5 刷新页面（客户端包在启动时装载） |
+| 「暂时无法读取插件」且带错误代码块 | 看灰色错误详情：`pluginManager.list failed: ...` / `transport failure ...`，按下面条目对号入座 |
+| 错误含 **404** 或 `invocation-unavailable` | 安装版本低于 0.2.0（缺少 ./typert 严格注册）——更新并重启 |
+| `cannot get property "remote.pluginManager" without inject` | 版本低于 0.2.2 —— 更新后刷新页面 |
+| 开关点了没反应 | 检查 `~/.dsh/cordis.patch.yml` 是否保持行块结构（列 0 的 - 开头）；标注「表达式控制」的行由 !!js 表达式决定，需直接改配置文件 |
+| 日志在哪里 | 主机错误看 DSH 启动日志（启动器控制台）；客户端错误看浏览器 F12 控制台 |
+| 回滚 | 删除补丁文件中插件管家写入的行块；备注点「恢复默认」；或按上面的 remove 命令卸载 |
+
 ## 项目结构
 
 ```text
@@ -112,21 +178,24 @@ lib/                   构建产物（已提交，GitHub 安装免构建）
 tests/                 冒烟/端到端测试
 ```
 
-## 测试
+## 开发
 
 ```bash
-node tests/patch-file.smoke.mjs   # 补丁编辑器 9 项冒烟测试
-node tests/host-gateway.e2e.mjs   # 主机网关端到端（含覆盖文件落盘校验）
-node tests/claims.e2e.mjs         # 端点声明验证（普通与 tsx 源码启动模式均适用）
+pnpm build                      # tsc + tsdown
+node tests/patch-file.smoke.mjs # 补丁编辑器 9 项冒烟测试
+node tests/host-gateway.e2e.mjs # 主机网关端到端（含覆盖文件落盘校验）
+node tests/claims.e2e.mjs       # 端点声明验证（普通与 tsx 源码启动模式均适用）
 ```
 
 > 测试脚本内的绝对路径指向本机 DSH 安装目录（仅开发环境使用，不影响运行时行为）。
 
-## 注意事项
+**贡献**：Fork → 修改 → `pnpm build` → 跑上面的测试 → 向 main 分支提 PR。文档、目录条目、翻译等小型修复无需提前沟通。报 issue 时请附 DSH 版本和标签页里显示的完整错误详情。
 
-- 停用浏览器端插件（ui-* / client-*）后，刷新页面才会完全卸载；
-- 手工编辑补丁文件时请保留行块结构（列 0 的 - 开头）；
-- 卸载：`dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`。
+## 许可证与安全
+
+**许可证**：MIT —— 见 [LICENSE](../../LICENSE)。基于 DeepSeek Harness 公开插件机制开发，与 DeepSeek 官方无隶属关系。
+
+**安全**：本插件不读取任何凭据、不访问外网。发现安全问题请使用 GitHub 仓库 [Security 标签页](../../security) 的 **Report a vulnerability** 私下报告，不要公开发布漏洞细节。
 
 ---
 
@@ -145,7 +214,5 @@ node tests/claims.e2e.mjs         # 端点声明验证（普通与 tsx 源码启
 <div align="center">
 
 MIT License © [2768651338](https://github.com/2768651338)
-
-基于 DeepSeek Harness 公开插件机制开发，与 DeepSeek 官方无隶属关系。
 
 </div>

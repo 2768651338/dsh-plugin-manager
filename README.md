@@ -1,4 +1,4 @@
-<!-- English version. 中文文档见 README.zh.md -->
+<!-- English version. 中文文档见 docs/lang/README_ZH.md -->
 <div align="center">
 
 # dsh-plugin-manager
@@ -20,7 +20,7 @@
 
 <br>
 
-[Why](#why-it-exists) · [Install](#install) · [Features](#features) · [How It Works](#how-it-works) · [Custom Notes](#custom-notes) · [Tests](#tests)
+[Overview](#overview) · [Compatibility](#compatibility) · [Install / Uninstall](#install--uninstall) · [Quick Start](#quick-start) · [Configuration](#configuration) · [Permissions & Data](#permissions--data) · [Features](#features) · [Troubleshooting](#troubleshooting) · [Development](#development)
 
 [**中文**](docs/lang/README_ZH.md) · [**Español**](docs/lang/README_ES.md) · [**日本語**](docs/lang/README_JA.md) · [**Deutsch**](docs/lang/README_DE.md) · [**Русский**](docs/lang/README_RU.md) · [**Português**](docs/lang/README_PT.md) · [**한국어**](docs/lang/README_KO.md)
 
@@ -34,7 +34,11 @@
 
 ---
 
-## Why it exists
+## Overview
+
+**Problem.** The built-in "Plugin list" in DeepSeek Harness shows only English module names with no descriptions — once you install many plugins, nobody can tell what each row does. Enable/disable previously required hand-editing `cordis.patch.yml`, which is easy to break.
+
+**Who it's for.** Every DeepSeek Harness user, especially people who install many plugins and want to know what each one does, toggle them safely, and annotate the ones the catalog doesn't cover.
 
 | Pain | Before | With this plugin |
 |------|--------|------------------|
@@ -43,23 +47,73 @@
 | Unknown plugins stay mysterious | Fallback text only | Add your own notes directly in the UI |
 | Nothing is safe from fat fingers | Any row can be disabled | System rows locked, `!!js`-controlled rows labeled |
 
-## Install
+## Compatibility
+
+| Item | Value |
+|------|-------|
+| DSH version | **0.1.0-rc.5** (official installer, built-in source tree under `resources/harness`) |
+| Verified on | **2026-08-14**, web profile, Windows |
+| Install mechanism | `dsh plugin --profile web add` (bundle patch + dual-face row) |
+| Depends on | typert-loader / api-gateway / client-modules rows shipped in `dsh-base` + `dsh-web-app` |
+
+> The official launcher boots via tsx from source; this plugin's strict `./typert` registration is specifically designed to work under both plain-node and tsx source launch (covered by `tests/claims.e2e.mjs`). If you run a different DSH version, re-run the test suite before reporting issues.
+
+## Install / Uninstall
 
 ```bash
-# Option 1: install from GitHub (recommended, same bundle mechanism as dsh-navbar)
+# Install (recommended, same bundle mechanism as dsh-navbar)
 dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 
-# Option 2: install from a zip (download from the Release page)
-# unzip to a path without spaces, then:
+# Alternative: install from a zip (download from the Release page), unzip to a path without spaces, then:
 dsh plugin --profile web add file:/<unzipped-dir>/dsh-plugin-manager
 
-# Option 3: build locally (clone this repository)
+# Alternative: build locally (clone this repository)
 pnpm build   # tsc + tsdown → lib/index.js (host half) and lib/client.js (browser half)
 dsh plugin --profile web add file:./dsh-plugin-manager
 ```
 
-> Then **restart DeepSeek Harness** and press **Ctrl+F5** once. Open *Settings → Plugins → Plugin Manager*.
-> The `lib/` artifacts are committed, so GitHub installs need no local build.
+> After installing, **restart DeepSeek Harness** and press **Ctrl+F5** once. Open *Settings → Plugins → Plugin Manager*. The `lib/` artifacts are committed, so GitHub installs need no local build.
+
+| Action | Command |
+|--------|---------|
+| Upgrade | `dsh plugin --profile web update` (or re-run the `add` command), then restart DSH |
+| Disable (temporarily) | Click **停用/Disable** on the plugin's own card in Plugin Manager — the row stays installed |
+| Remove | `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`, then remove its rows from `cordis.patch.yml` if any |
+
+## Quick Start
+
+Minimal reproducible walkthrough (2 minutes):
+
+```bash
+# 1. Install
+dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
+# 2. Restart DeepSeek Harness, press Ctrl+F5 in the web page
+```
+
+3. Open **Settings → Plugins → Plugin Manager** — you see the full catalog with Chinese names and descriptions.
+4. Toggle one plugin: search for `trajectory`, click **停用 (Disable)** on the *轨迹视图* card → the row turns 已停用 within ~1 second (host-side effect; browser-side plugins fully unload after a page refresh).
+5. Annotate one plugin: click **编辑备注 (Edit notes)** on the *联网搜索* card, rename it and add a note, click **保存 (Save)** → the card updates immediately; **恢复默认 (Restore default)** reverts it.
+
+## Configuration
+
+| Item | Details |
+|------|---------|
+| Plugin-level options | None — the plugin needs no configuration; install-and-use |
+| Toggle file | `~/.dsh/cordis.patch.yml` (global layer, hot-reloaded by DSH) |
+| Notes override file | `~/.dsh/plugin-manager/catalog.json` (auto-created on first save) |
+| Environment variables | None of its own; follows DSH's `DSH_HOME` resolution for the files above |
+| Defaults | Unlisted plugins fall back to built-in catalog → English short name → fallback text |
+| Sensitive items | None — no keys, tokens, or credentials are read or stored |
+
+## Permissions & Data
+
+| Scope | What it touches |
+|-------|-----------------|
+| Files (read) | `cordis.patch.yml`, `plugin-manager/catalog.json`, and the in-process loader plugin list |
+| Files (write) | `~/.dsh/cordis.patch.yml` (toggle rows), `~/.dsh/plugin-manager/catalog.json` (notes) — both inside the DSH home only |
+| Network | None. The browser half talks only to your local DSH `/api` RPC endpoint |
+| Credentials | Never read |
+| User data | Never read (no access to sessions, messages, or prompts) |
 
 ## Features
 
@@ -93,6 +147,18 @@ Click **Edit notes** on any card. Saving with both fields empty removes that plu
 
 Precedence: override file > built-in catalog > English short name.
 
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| The tab doesn't appear | Restart DeepSeek Harness, then Ctrl+F5 the page (client bundles load at boot) |
+| "暂时无法读取插件" with an error block | Read the gray error detail under the message: `pluginManager.list failed: ...` / `transport failure ...` and match it below |
+| Error mentions **404** or `invocation-unavailable` | Your installed version is older than 0.2.0 (missing `./typert` strict registration) — update and restart |
+| `cannot get property "remote.pluginManager" without inject` | Version older than 0.2.2 — update and refresh |
+| A toggle doesn't seem to work | Check `~/.dsh/cordis.patch.yml` keeps row-block structure (a `- ` dash at column 0); rows labeled "表达式控制" are `!!js`-controlled — edit the config file directly |
+| Where are the logs? | DSH host startup log (launcher console) for host errors; browser DevTools (F12) console for client errors |
+| Rollback | Remove the plugin's rows from `cordis.patch.yml`, use **恢复默认** for notes, or uninstall with the `remove` command above |
+
 ## Project Structure
 
 ```text
@@ -112,21 +178,24 @@ lib/                    built artifacts (committed; GitHub installs skip buildin
 tests/                  smoke / end-to-end tests
 ```
 
-## Tests
+## Development
 
 ```bash
-node tests/patch-file.smoke.mjs   # 9 smoke tests for the patch editor
-node tests/host-gateway.e2e.mjs   # host gateway end-to-end (incl. override-file contents)
-node tests/claims.e2e.mjs         # endpoint claims under plain-node and tsx source launch
+pnpm build                      # tsc + tsdown
+node tests/patch-file.smoke.mjs # 9 smoke tests for the patch editor
+node tests/host-gateway.e2e.mjs # host gateway end-to-end (incl. override-file contents)
+node tests/claims.e2e.mjs       # endpoint claims under plain-node and tsx source launch
 ```
 
 > Absolute paths inside the test scripts point at the local DSH installation and are development-only; they do not affect runtime behavior.
 
-## Notes
+**Contributing.** Fork → change → `pnpm build` → run the tests above → open a PR against `main`. Small fixes (docs, catalog entries, translations) are welcome without prior discussion. Report issues with the DSH version and the exact error detail shown in the tab.
 
-- Disabling browser-side plugins (ui-* / client-*) fully unloads them only after a page refresh;
-- When hand-editing the patch file, keep the row-block structure (a `- ` dash at column 0);
-- Uninstall: `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`.
+## License & Security
+
+**License**: MIT — see [LICENSE](LICENSE). Built on DeepSeek Harness's public plugin mechanism, not affiliated with DeepSeek.
+
+**Security**: this plugin reads no credentials and sends nothing over the network. To report a security issue privately, use GitHub's **Report a vulnerability** on the [Security tab](../../security) — do not open a public issue with exploit details.
 
 ---
 
@@ -145,7 +214,5 @@ node tests/claims.e2e.mjs         # endpoint claims under plain-node and tsx sou
 <div align="center">
 
 MIT License © [2768651338](https://github.com/2768651338)
-
-Built on DeepSeek Harness's public plugin mechanism — not affiliated with DeepSeek.
 
 </div>

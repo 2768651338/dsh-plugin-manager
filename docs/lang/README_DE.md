@@ -23,6 +23,8 @@
 
 </div>
 
+> ⚠️ Diese Übersetzung kann hinter der englischen Version zurückliegen. Die Selbstprüfungs-Abschnitte für die Katalog-Aufnahme (Kompatibilität, Schnellstart, Konfiguration, Berechtigungen & Daten, Fehlerbehebung, Sicherheit) richten sich nach der [englischen Version](../README.md).
+
 ---
 
 > 🆕 **2026-08-14 · v0.3.0** — Notizbearbeitung in der Oberfläche ist da: Klicke auf **Notizen bearbeiten** an einer beliebigen Karte, um einen Plugin umzubenennen oder seine Beschreibung zu ändern — ohne `catalog.json` anzufassen.
