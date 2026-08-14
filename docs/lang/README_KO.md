@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.3.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -125,7 +125,7 @@ node tests/claims.e2e.mjs         # 일반 node 및 tsx 소스 실행에서의 �
 
 - 브라우저 측 플러그인(ui-* / client-*) 비활성화는 페이지를 새로고침해야 완전히 반영됩니다;
 - 패치 파일을 손으로 편집할 때는 행 블록 구조(열 0의 `- ` 대시)를 유지하세요;
-- 제거: `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`.
+- 제거: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
 
 ---
 

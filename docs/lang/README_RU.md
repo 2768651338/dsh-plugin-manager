@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.3.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -125,7 +125,7 @@ node tests/claims.e2e.mjs         # регистрация эндпоинтов 
 
 - Отключение браузерных плагинов (ui-* / client-*) полностью применяется только после обновления страницы;
 - При ручной правке патч-файла сохраняйте структуру блоков строк (дефис `- ` в колонке 0);
-- Удаление: `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`.
+- Удаление: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
 
 ---
 

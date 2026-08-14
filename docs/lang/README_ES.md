@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.3.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -125,7 +125,7 @@ node tests/claims.e2e.mjs         # reclamación de endpoints bajo node plano y 
 
 - Desactivar plugins del lado del navegador (ui-* / client-*) solo se descarga por completo tras refrescar la página;
 - Al editar el archivo de parches a mano, conserva la estructura de bloques (un guion `- ` en la columna 0);
-- Desinstalar: `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`.
+- Desinstalar: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
 
 ---
 

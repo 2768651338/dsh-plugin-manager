@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.3.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 [![topic: dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-7B68EE.svg)](https://github.com/topics/dsh-plugin)
@@ -29,6 +29,8 @@
 ---
 
 > 🆕 **2026-08-14 · v0.3.0** — 界面内备注编辑上线：点卡片上的「编辑备注」就能改名、改写说明，不用再碰 catalog.json 配置文件。
+>
+> 🏷️ **v0.4.0** — 包名改用自有命名空间：@2768651338/dsh-plugin-manager（原 @dsh-external/* 无维护权限，已按要求更换）。
 >
 > 🔧 **v0.2.x** — 修复 tsx 源码启动模式下的端点 404（./typert 严格注册）与 cordis 注入访问问题（ctx.get 通道）。
 
@@ -78,7 +80,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 |------|------|
 | 升级 | `dsh plugin --profile web update`（或重新执行 add 命令），然后重启 DSH |
 | 临时禁用 | 在插件管家自己的卡片上点「停用」——行仍在，随时可重新启用 |
-| 彻底移除 | `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`，若补丁文件中有它写入的行块则一并删除 |
+| 彻底移除 | `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`，若补丁文件中有它写入的行块则一并删除 |
 
 ## 快速上手
 

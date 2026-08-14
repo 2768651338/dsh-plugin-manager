@@ -1,7 +1,7 @@
 {
-  "name": "@dsh-external/dsh-plugin-manager",
+  "name": "@2768651338/dsh-plugin-manager",
   "description": "插件管家——图形化插件管理：中文名与用途说明目录 + 一键启停（写入全局 cordis.patch.yml，实时热生效）",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "main": "lib/index.js",
@@ -29,21 +29,13 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",
-    "@deepseek-ai/dsh-typert-protocol": "*",
-    "react": "^18.2.0",
-    "@deepseek-ai/dsh-client-ui-primitives": "*"
+    "@deepseek-ai/dsh-typert-protocol": "*"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
       "optional": true
     },
     "@deepseek-ai/dsh-typert-protocol": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-client-ui-primitives": {
       "optional": true
     }
   },

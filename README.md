@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.3.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 [![topic: dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-7B68EE.svg)](https://github.com/topics/dsh-plugin)
@@ -29,6 +29,8 @@
 ---
 
 > 🆕 **2026-08-14 · v0.3.0** — In-UI notes editing is live: click **Edit notes** on any card to rename a plugin or rewrite its description in place. No more hand-editing `catalog.json`.
+>
+> 🏷️ **v0.4.0** — Package renamed to the owner-controlled scope @2768651338/dsh-plugin-manager (previous @dsh-external/* scope was not authorized).
 >
 > 🔧 **v0.2.x** — Fixed endpoint 404 under tsx source launch (strict `./typert` registration) and the cordis inject access (`ctx.get` channel).
 
@@ -78,7 +80,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 |--------|---------|
 | Upgrade | `dsh plugin --profile web update` (or re-run the `add` command), then restart DSH |
 | Disable (temporarily) | Click **停用/Disable** on the plugin's own card in Plugin Manager — the row stays installed |
-| Remove | `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`, then remove its rows from `cordis.patch.yml` if any |
+| Remove | `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`, then remove its rows from `cordis.patch.yml` if any |
 
 ## Quick Start
 

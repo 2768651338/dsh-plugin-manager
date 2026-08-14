@@ -24,7 +24,7 @@ writeFileSync(configPath, [
   '- id: api-gateway',
   "  name: '" + gatewayUrl + "'",
   '- id: plugin-manager',
-  "  name: '@dsh-external/dsh-plugin-manager'",
+  "  name: '@2768651338/dsh-plugin-manager'",
   '',
 ].join('\n'))
 

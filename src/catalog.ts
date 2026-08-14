@@ -207,7 +207,7 @@ export const SYSTEM_MODULES: ReadonlySet<string> = new Set([
   '@deepseek-ai/dsh-client-locale',
   '@deepseek-ai/dsh-client-ui-layout',
   // 插件管家自身
-  '@dsh-external/dsh-plugin-manager',
+  '@2768651338/dsh-plugin-manager',
 ])
 
 /** 按行 id 保护（与模块名无关的引导行，如 include 根）。 */

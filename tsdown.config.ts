@@ -13,7 +13,7 @@ import type { UserConfig } from 'tsdown'
 import { transform } from 'lightningcss'
 import { PLATFORM_MODULES } from '../../client/web/src/platform.ts'
 
-const ID = '@dsh-external/dsh-plugin-manager'
+const ID = '@2768651338/dsh-plugin-manager'
 
 /** 浏览器 externals：shell 共享的冻结模块表。 */
 const CLIENT_EXTERNALS: readonly string[] = [...PLATFORM_MODULES]

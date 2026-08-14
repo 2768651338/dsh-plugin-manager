@@ -55,7 +55,7 @@ const setEnabledResult$schema = z.object({
   'message': z.string().optional(),
 })
 
-const PACKAGE = '@dsh-external/dsh-plugin-manager'
+const PACKAGE = '@2768651338/dsh-plugin-manager'
 
 /** 浏览器侧挂载贡献：客户端 apply 里 ctx.remote.$mount(TYPERT_REMOTE)。 */
 export const TYPERT_REMOTE = {
@@ -70,7 +70,7 @@ export const TYPERT_REMOTE = {
       parameters: [],
       result: {
         mode: 'strict',
-        typeSymbol: '@dsh-external/dsh-plugin-manager/types#PluginManagerSnapshot',
+        typeSymbol: '@2768651338/dsh-plugin-manager/types#PluginManagerSnapshot',
         schema: snapshot$schema,
       },
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 1, 'column': 1 },
@@ -97,7 +97,7 @@ export const TYPERT_REMOTE = {
       ],
       result: {
         mode: 'strict',
-        typeSymbol: '@dsh-external/dsh-plugin-manager/types#SetEnabledResult',
+        typeSymbol: '@2768651338/dsh-plugin-manager/types#SetEnabledResult',
         schema: setEnabledResult$schema,
       },
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 2, 'column': 1 },
@@ -130,7 +130,7 @@ export const TYPERT_REMOTE = {
       ],
       result: {
         mode: 'strict',
-        typeSymbol: '@dsh-external/dsh-plugin-manager/types#CatalogEditResult',
+        typeSymbol: '@2768651338/dsh-plugin-manager/types#CatalogEditResult',
         schema: catalogEditResult$schema,
       },
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 3, 'column': 1 },
@@ -151,7 +151,7 @@ export const TYPERT_REMOTE = {
       ],
       result: {
         mode: 'strict',
-        typeSymbol: '@dsh-external/dsh-plugin-manager/types#CatalogEditResult',
+        typeSymbol: '@2768651338/dsh-plugin-manager/types#CatalogEditResult',
         schema: catalogEditResult$schema,
       },
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 4, 'column': 1 },
