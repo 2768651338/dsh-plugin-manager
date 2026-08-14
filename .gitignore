@@ -1,0 +1,9 @@
+# 依赖与构建中间产物
+node_modules/
+lib/types/
+*.tsbuildinfo
+*.map
+
+# 系统文件
+.DS_Store
+Thumbs.db

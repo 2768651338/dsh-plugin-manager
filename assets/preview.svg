@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="640" viewBox="0 0 720 640" font-family="system-ui, 'Microsoft YaHei', sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1f2329" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="720" height="640" fill="#f5f6f8"/>
+  <!-- 面板 -->
+  <rect x="24" y="20" width="672" height="600" rx="12" fill="#ffffff" stroke="#e4e6ea" filter="url(#soft)"/>
+
+  <!-- 页头 -->
+  <text x="44" y="62" font-size="17" font-weight="600" fill="#1f2329">插件管理</text>
+  <text x="44" y="84" font-size="12" fill="#8a9099">共 165 个插件，已启用 136 个</text>
+
+  <!-- 工具栏 -->
+  <rect x="44" y="100" width="330" height="34" rx="8" fill="#ffffff" stroke="#e4e6ea"/>
+  <circle cx="62" cy="117" r="6" fill="none" stroke="#8a9099" stroke-width="1.6"/>
+  <line x1="66" y1="121" x2="70" y2="125" stroke="#8a9099" stroke-width="1.6" stroke-linecap="round"/>
+  <text x="80" y="121" font-size="12.5" fill="#b6bcc4">搜索插件（名称 / 说明 / 模块名）</text>
+  <rect x="382" y="100" width="96" height="34" rx="8" fill="#ffffff" stroke="#e4e6ea"/>
+  <text x="398" y="121" font-size="12.5" fill="#4a5058">全部分类</text>
+  <path d="M466 114 l5 5 -5 5" stroke="#8a9099" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="486" y="100" width="56" height="34" rx="8" fill="#ffffff" stroke="#e4e6ea"/>
+  <text x="505" y="121" font-size="12.5" fill="#4a5058">刷新</text>
+
+  <!-- 卡片 1：已启用 + 编辑备注 -->
+  <g>
+    <rect x="44" y="152" width="632" height="118" rx="10" fill="#ffffff" stroke="#e4e6ea" filter="url(#soft)"/>
+    <circle cx="66" cy="176" r="4" fill="#34c759"/>
+    <text x="82" y="173" font-size="13.5" font-weight="600" fill="#1f2329">联网搜索（DeepSeek）</text>
+    <rect x="196" y="161" width="36" height="18" rx="5" fill="#f5f6f8"/>
+    <text x="204" y="174" font-size="10.5" fill="#8a9099">模型与网络</text>
+    <rect x="236" y="161" width="50" height="18" rx="5" fill="#e8f4ff"/>
+    <text x="245" y="174" font-size="10.5" fill="#4c9aff">已自定义</text>
+    <text x="82" y="196" font-size="11" fill="#b6bcc4" font-family="Consolas, monospace">@deepseek-ai/dsh-web-search-deepseek</text>
+    <text x="82" y="218" font-size="12" fill="#5b626b">DeepSeek 官方搜索提供者（web_search），为模型提供联网检索能力。</text>
+    <text x="82" y="240" font-size="10.5" fill="#b6bcc4">行 ID: include:web-search-deepseek · 状态: 已挂载</text>
+    <rect x="560" y="168" width="52" height="20" rx="5" fill="#e7f8ee"/>
+    <text x="572" y="182" font-size="10.5" fill="#34c759">已启用</text>
+    <rect x="620" y="164" width="44" height="26" rx="7" fill="#ffffff" stroke="#e9c46a"/>
+    <text x="634" y="181" font-size="11.5" fill="#c98a2c">停用</text>
+    <text x="612" y="216" font-size="11" fill="#4a5058">编辑备注</text>
+    <rect x="596" y="224" width="76" height="1.5" fill="#d9dde2"/>
+  </g>
+
+  <!-- 卡片 2：编辑面板展开 -->
+  <g>
+    <rect x="44" y="284" width="632" height="232" rx="10" fill="#ffffff" stroke="#4c9aff" filter="url(#soft)"/>
+    <circle cx="66" cy="308" r="4" fill="#34c759"/>
+    <text x="82" y="305" font-size="13.5" font-weight="600" fill="#1f2329">会话统计</text>
+    <rect x="140" y="293" width="36" height="18" rx="5" fill="#f5f6f8"/>
+    <text x="148" y="306" font-size="10.5" fill="#8a9099">会话</text>
+    <text x="82" y="328" font-size="11" fill="#b6bcc4" font-family="Consolas, monospace">@deepseek-ai/dsh-session-stats</text>
+    <text x="82" y="350" font-size="12" fill="#5b626b">整个会话日志的轮次/耗时统计投影，供聊天区的统计条展示。</text>
+    <rect x="560" y="300" width="52" height="20" rx="5" fill="#e7f8ee"/>
+    <text x="572" y="314" font-size="10.5" fill="#34c759">已启用</text>
+    <rect x="620" y="296" width="44" height="26" rx="7" fill="#ffffff" stroke="#e9c46a"/>
+    <text x="634" y="313" font-size="11.5" fill="#c98a2c">停用</text>
+
+    <!-- 编辑面板 -->
+    <rect x="60" y="368" width="600" height="130" rx="8" fill="#f8f9fb" stroke="#d9dde2" stroke-dasharray="4 3"/>
+    <text x="76" y="392" font-size="10.5" fill="#8a9099">名称</text>
+    <rect x="76" y="398" width="568" height="28" rx="7" fill="#ffffff" stroke="#e4e6ea"/>
+    <text x="86" y="417" font-size="12" fill="#1f2329">会话统计</text>
+    <text x="76" y="446" font-size="10.5" fill="#8a9099">说明</text>
+    <rect x="76" y="452" width="568" height="38" rx="7" fill="#ffffff" stroke="#e4e6ea"/>
+    <text x="86" y="468" font-size="12" fill="#1f2329">整个会话日志的轮次与耗时统计，为界面提供数据。</text>
+    <text x="86" y="482" font-size="12" fill="#b6bcc4">补充更多说明…</text>
+    <rect x="76" y="498" width="56" height="26" rx="7" fill="#e8f4ff"/>
+    <text x="94" y="515" font-size="11.5" fill="#4c9aff">保存</text>
+    <rect x="140" y="498" width="56" height="26" rx="7" fill="#ffffff" stroke="#e4e6ea"/>
+    <text x="158" y="515" font-size="11.5" fill="#4a5058">取消</text>
+    <rect x="560" y="498" width="84" height="26" rx="7" fill="#ffffff" stroke="#e4e6ea"/>
+    <text x="582" y="515" font-size="11.5" fill="#8a9099">恢复默认</text>
+  </g>
+
+  <!-- 卡片 3：停用状态 -->
+  <g>
+    <rect x="44" y="530" width="632" height="66" rx="10" fill="#fbfbfc" stroke="#e4e6ea"/>
+    <circle cx="66" cy="554" r="4" fill="#b6bcc4"/>
+    <text x="82" y="551" font-size="13" font-weight="600" fill="#4a5058">远程命令执行（代码模式）</text>
+    <text x="82" y="574" font-size="12" fill="#5b626b">给模型用的命令执行工具，停用后模型无法直接运行命令。</text>
+    <rect x="560" y="542" width="52" height="20" rx="5" fill="#f5f6f8"/>
+    <text x="572" y="556" font-size="10.5" fill="#8a9099">已停用</text>
+    <rect x="620" y="538" width="44" height="26" rx="7" fill="#ffffff" stroke="#5eb57a"/>
+    <text x="634" y="555" font-size="11.5" fill="#34a55c">启用</text>
+  </g>
+
+  <!-- 示意图标注 -->
+  <text x="688" y="614" font-size="11" fill="#b6bcc4" text-anchor="end">界面示意图（非实际截图）</text>
+</svg>

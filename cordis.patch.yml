@@ -1,0 +1,6 @@
+# 插件管家（@dsh-external/dsh-plugin-manager）bundle 补丁：
+# 一行双面插件——主机 half 提供 pluginManager 远程服务（列表/启停/覆盖），
+# 浏览器 half 在 设置→插件 里注册“插件管家”标签页。
+- insert:
+    - id: plugin-manager
+      name: '@dsh-external/dsh-plugin-manager'
