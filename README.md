@@ -20,7 +20,9 @@
 
 <br>
 
-[中文文档](README.zh.md) · [Why](#why-it-exists) · [Install](#install) · [Features](#features) · [How It Works](#how-it-works) · [Custom Notes](#custom-notes) · [Tests](#tests)
+[Why](#why-it-exists) · [Install](#install) · [Features](#features) · [How It Works](#how-it-works) · [Custom Notes](#custom-notes) · [Tests](#tests)
+
+[**中文**](docs/lang/README_ZH.md) · [**Español**](docs/lang/README_ES.md) · [**日本語**](docs/lang/README_JA.md) · [**Deutsch**](docs/lang/README_DE.md) · [**Русский**](docs/lang/README_RU.md) · [**Português**](docs/lang/README_PT.md) · [**한국어**](docs/lang/README_KO.md)
 
 </div>
 
