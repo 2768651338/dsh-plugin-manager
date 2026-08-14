@@ -1,17 +1,45 @@
+<!-- English version. 中文文档见 README.zh.md -->
+<div align="center">
+
 # dsh-plugin-manager
 
-A graphical plugin manager for DeepSeek Harness. It adds a **Plugin Manager** tab under *Settings → Plugins*, showing every plugin with a Chinese name and a plain-language description, a one-click enable/disable switch (written to the global patch file and hot-reloaded live), and in-UI notes editing (stored in a local override file).
+> **Every plugin finally speaks for itself** — Chinese names, plain-language descriptions, one-click enable/disable, and in-UI notes editing for DeepSeek Harness.
 
-[中文文档](README.zh.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
+[![version](https://img.shields.io/badge/version-v0.3.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
+[![topic: dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-7B68EE.svg)](https://github.com/topics/dsh-plugin)
 
-![Plugin Manager tab — real screenshot](assets/preview.png)
+<br>
+
+<img src="assets/preview.png" alt="Plugin Manager tab — real screenshot" width="720">
+
+**Settings → Plugins → Plugin Manager** · 165 plugins cataloged, one click to toggle, notes edited in place.
+
+<br>
+
+[中文文档](README.zh.md) · [Why](#why-it-exists) · [Install](#install) · [Features](#features) · [How It Works](#how-it-works) · [Custom Notes](#custom-notes) · [Tests](#tests)
+
+</div>
+
+---
+
+> 🆕 **2026-08-14 · v0.3.0** — In-UI notes editing is live: click **Edit notes** on any card to rename a plugin or rewrite its description in place. No more hand-editing `catalog.json`.
+>
+> 🔧 **v0.2.x** — Fixed endpoint 404 under tsx source launch (strict `./typert` registration) and the cordis inject access (`ctx.get` channel).
+
+---
 
 ## Why it exists
 
-- The built-in "Plugin list" shows only English module names with no descriptions — once you install many plugins, nobody can tell what each one does;
-- Enable/disable previously required hand-editing cordis.patch.yml — this plugin performs line-level surgical edits, preserving comments and `!!js` expressions, touching only the target row's `disabled` field;
-- Ships a built-in catalog of 165 entries (name + one-line description + category); unlisted plugins get a fallback and can be annotated in the UI;
-- Notes (name/description) are editable directly in the settings UI — no config-file editing.
+| Pain | Before | With this plugin |
+|------|--------|------------------|
+| Plugin list is meaningless | English module names only, no clue what each row does | Chinese name + one-line description + category for every plugin |
+| Toggling is manual | Hand-edit `cordis.patch.yml` (easy to break) | One-click switch, surgical line-level edits, hot-reloaded in ~1s |
+| Unknown plugins stay mysterious | Fallback text only | Add your own notes directly in the UI |
+| Nothing is safe from fat fingers | Any row can be disabled | System rows locked, `!!js`-controlled rows labeled |
 
 ## Install
 
@@ -28,26 +56,32 @@ pnpm build   # tsc + tsdown → lib/index.js (host half) and lib/client.js (brow
 dsh plugin --profile web add file:./dsh-plugin-manager
 ```
 
-Then **restart DeepSeek Harness** and open *Settings → Plugins → Plugin Manager*. The `lib/` artifacts are committed, so GitHub installs need no local build.
+> Then **restart DeepSeek Harness** and press **Ctrl+F5** once. Open *Settings → Plugins → Plugin Manager*.
+> The `lib/` artifacts are committed, so GitHub installs need no local build.
 
 ## Features
 
-- **Chinese catalog**: 130+ built-in entries (name / description / category) with fallback and per-plugin customization;
-- **One-click enable/disable**: toggles write to `~/.dsh/cordis.patch.yml` (global layer) and DSH's HMR watcher re-applies them within ~1 second; enabling writes an explicit `disabled: false` that overrides lower layers;
-- **In-UI notes editing**: the "Edit notes" button on each card edits the Chinese name/description (saved to `~/.dsh/plugin-manager/catalog.json`), with one-click restore-to-default;
-- **System protection**: bootstrap/transport/settings-shell rows cannot be disabled; `!!js`-expression-controlled rows are labeled and locked, preventing accidents;
-- **Search & filter**: search by name/description/module, filter by category, enabled-count summary.
+| Feature | Description |
+|---------|-------------|
+| 📚 Chinese catalog | 130+ built-in entries (name / description / category), fallback + per-plugin customization |
+| 🔘 One-click toggle | Writes `~/.dsh/cordis.patch.yml` (global layer); DSH's HMR watcher re-applies within ~1 second; enabling writes an explicit `disabled: false` that overrides lower layers |
+| ✏️ In-UI notes | "Edit notes" on each card edits the Chinese name/description (`~/.dsh/plugin-manager/catalog.json`), with one-click restore-to-default |
+| 🛡️ Safety guards | Bootstrap/transport/settings-shell rows locked as "System"; `!!js`-expression rows labeled "Expression-controlled" |
+| 🔍 Search & filter | Search by name/description/module, filter by category, enabled-count summary |
 
-## How it works
+## How It Works
 
-- **Host half** (`lib/index.js`): registers the `pluginManager` cordis service (a Typert remote service) exposing `list` / `setEnabled` / `setOverride` / `removeOverride`. Toggles use surgical patch-file editing (comments and expressions preserved; re-reads the file before writing to merge concurrent manual edits).
-- **Strict endpoint registration** (`lib/typert.host.js`): the package exports `./typert`, which the typert-loader registers as strict invocation definitions. This is the crucial part: when DSH boots in tsx source mode, the gateway and an external plugin can hold two copies of typert-protocol, making decorator markers invisible across copies (symptom: 404 on every call). Strict registration goes through the shared registry and sidesteps module-instance identity entirely.
-- **Browser half** (`lib/client.js`): mounts the `pluginManager` remote namespace (accessed through the inject-free `ctx.get()` channel to avoid a self-mount deadlock) and registers the Plugin Manager tab in the `settings.plugins.tab` slot.
-- **Runtime dependencies**: the peer dependencies `@deepseek-ai/cordis` and `@deepseek-ai/dsh-typert-protocol` are provided by DSH's `profiles/node_modules` fallback links — no extra pnpm downloads.
+| Half | File | Role |
+|------|------|------|
+| Host | `lib/index.js` | Registers the `pluginManager` cordis service (Typert remote): `list` / `setEnabled` / `setOverride` / `removeOverride`. Toggles use surgical patch-file editing — comments and `!!js` expressions preserved, file re-read before write to merge concurrent edits. |
+| Host | `lib/typert.host.js` | Exports `./typert`; the typert-loader registers it as **strict invocation definitions**. Crucial fix: under tsx source launch the gateway and an external plugin can hold two copies of typert-protocol — decorator markers are invisible across copies (symptom: every call 404s). Strict registration goes through the shared registry, sidestepping module-instance identity. |
+| Browser | `lib/client.js` | Mounts the `pluginManager` remote namespace via the inject-free `ctx.get()` channel (avoids a self-mount deadlock) and registers the Plugin Manager tab in the `settings.plugins.tab` slot. |
 
-## Custom notes
+> Runtime dependencies: `@deepseek-ai/cordis` and `@deepseek-ai/dsh-typert-protocol` resolve through DSH's `profiles/node_modules` fallback links — no extra pnpm downloads.
 
-Click "Edit notes" on a card. Saving with both fields empty removes that plugin's customization. Power users can also edit `~/.dsh/plugin-manager/catalog.json` directly:
+## Custom Notes
+
+Click **Edit notes** on any card. Saving with both fields empty removes that plugin's customization. Power users may still edit `~/.dsh/plugin-manager/catalog.json` directly:
 
 ```json
 {
@@ -57,7 +91,7 @@ Click "Edit notes" on a card. Saving with both fields empty removes that plugin'
 
 Precedence: override file > built-in catalog > English short name.
 
-## Project structure
+## Project Structure
 
 ```text
 src/
@@ -92,6 +126,24 @@ node tests/claims.e2e.mjs         # endpoint claims under plain-node and tsx sou
 - When hand-editing the patch file, keep the row-block structure (a `- ` dash at column 0);
 - Uninstall: `dsh plugin --profile web remove @dsh-external/dsh-plugin-manager`.
 
-## License & disclaimer
+---
 
-MIT License (see [LICENSE](LICENSE)). This plugin is built on DeepSeek Harness's public plugin mechanism, is not affiliated with DeepSeek, and contains no private official code.
+## Star History
+
+<a href="https://www.star-history.com/?repos=2768651338%2Fdsh-plugin-manager&type=date&legend=top-left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=2768651338/dsh-plugin-manager&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=2768651338/dsh-plugin-manager&type=date&legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/image?repos=2768651338/dsh-plugin-manager&type=date&legend=top-left" />
+  </picture>
+</a>
+
+---
+
+<div align="center">
+
+MIT License © [2768651338](https://github.com/2768651338)
+
+Built on DeepSeek Harness's public plugin mechanism — not affiliated with DeepSeek.
+
+</div>
