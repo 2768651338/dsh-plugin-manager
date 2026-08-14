@@ -4,9 +4,7 @@ A graphical plugin manager for DeepSeek Harness. It adds a **Plugin Manager** ta
 
 [中文文档](README.zh.md)
 
-![UI schematic](assets/preview.svg)
-
-> Schematic illustration, not an actual screenshot. The real page follows the DSH theme (light/dark).
+![Plugin Manager tab — real screenshot](assets/preview.png)
 
 ## Why it exists
 
