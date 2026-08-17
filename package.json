@@ -49,7 +49,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && tsdown --config ./tsdown.config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/patch-file.smoke.mjs && node tests/claims.e2e.mjs && node tests/gateway-path.e2e.mjs && node tests/host-gateway.e2e.mjs"
   },
   "files": [
     "lib/index.js",
