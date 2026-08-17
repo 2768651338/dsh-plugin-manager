@@ -158,6 +158,7 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 | 错误含 **404** 或 `invocation-unavailable` | 安装版本低于 0.2.0（缺少 ./typert 严格注册）——更新并重启 |
 | `cannot get property "remote.pluginManager" without inject` | 版本低于 0.2.2 —— 更新后刷新页面 |
 | 开关点了没反应 | 检查 `~/.dsh/cordis.patch.yml` 是否保持行块结构（列 0 的 - 开头）；标注「表达式控制」的行由 !!js 表达式决定，需直接改配置文件 |
+| pnpm 报 `peer range @deepseek-ai/*@* does not match resolved 0.1.0-rc.6` | 无害——DSH 以 prerelease `0.1.0-rc.6` 发布这些包，semver `*` 不匹配 prerelease。v0.4.1+ 已声明 `>=0.1.0-rc.0`；其它插件可在 `pnpm-workspace.yaml` 加 `peerDependencyRules.allowAny: ['@deepseek-ai/*']` |
 | 日志在哪里 | 主机错误看 DSH 启动日志（启动器控制台）；客户端错误看浏览器 F12 控制台 |
 | 回滚 | 删除补丁文件中插件管家写入的行块；备注点「恢复默认」；或按上面的 remove 命令卸载 |
 

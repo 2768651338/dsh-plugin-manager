@@ -159,6 +159,7 @@ Precedence: override file > built-in catalog > English short name.
 | Error mentions **404** or `invocation-unavailable` | Your installed version is older than 0.2.0 (missing `./typert` strict registration) — update and restart |
 | `cannot get property "remote.pluginManager" without inject` | Version older than 0.2.2 — update and refresh |
 | A toggle doesn't seem to work | Check `~/.dsh/cordis.patch.yml` keeps row-block structure (a `- ` dash at column 0); rows labeled "表达式控制" are `!!js`-controlled — edit the config file directly |
+| pnpm warns `peer range @deepseek-ai/*@* does not match resolved 0.1.0-rc.6` | Harmless — DSH ships these as prerelease `0.1.0-rc.6` and semver `*` doesn't match prereleases. v0.4.1+ declares `>=0.1.0-rc.0`; for other plugins add `peerDependencyRules.allowAny: ['@deepseek-ai/*']` to `pnpm-workspace.yaml` |
 | Where are the logs? | DSH host startup log (launcher console) for host errors; browser DevTools (F12) console for client errors |
 | Rollback | Remove the plugin's rows from `cordis.patch.yml`, use **恢复默认** for notes, or uninstall with the `remove` command above |
 
