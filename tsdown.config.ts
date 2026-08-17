@@ -11,7 +11,7 @@ import { existsSync } from 'node:fs'
 import { basename, dirname, resolve as resolvePath } from 'node:path'
 import type { UserConfig } from 'tsdown'
 import { transform } from 'lightningcss'
-import { PLATFORM_MODULES } from '../../client/web/src/platform.ts'
+import { PLATFORM_MODULES } from './platform.ts'
 
 const ID = '@2768651338/dsh-plugin-manager'
 

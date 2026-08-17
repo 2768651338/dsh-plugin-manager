@@ -59,5 +59,12 @@
     "cordis.patch.yml",
     "README.md"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "lightningcss": "^1.33.0",
+    "tsdown": "^0.22.14",
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
+  }
 }
