@@ -69,12 +69,13 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 | ✏️ Notas na interface | “Editar notas” em cada cartão altera o nome/descrição em chinês (`~/.dsh/plugin-manager/catalog.json`) com restauração do padrão em um clique |
 | 🛡️ Proteções | Linhas de bootstrap/transporte/shell de configurações bloqueadas como “Sistema”; linhas com expressões `!!js` rotuladas como “Controladas por expressão” |
 | 🔍 Busca e filtro | Busca por nome/descrição/módulo, filtro por categoria, resumo de habilitados |
+| 💾 Backup e restauração | Exporta notas + lista de plugins (dependências/bundles do perfil) + o patch de ativar/desativar para um JSON; a importação mescla (nunca remove entradas existentes) e exibe o comando exato de reinstalação |
 
 ## Como funciona
 
 | Metade | Arquivo | Papel |
 |--------|---------|-------|
-| Host | `lib/index.js` | Registra o serviço cordis `pluginManager` (remoto Typert): `list` / `setEnabled` / `setOverride` / `removeOverride`. Os interruptores usam edição cirúrgica do arquivo de patch — comentários e expressões `!!js` são preservados; o arquivo é relido antes da escrita para mesclar edições concorrentes. |
+| Host | `lib/index.js` | Registra o serviço cordis `pluginManager` (remoto Typert): `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`. Os interruptores usam edição cirúrgica do arquivo de patch — comentários e expressões `!!js` são preservados; o arquivo é relido antes da escrita para mesclar edições concorrentes. |
 | Host | `lib/typert.host.js` | Exporta `./typert`; o typert-loader o registra como **definições de invocação estritas**. Correção crucial: na inicialização via código-fonte tsx, o gateway e um plugin externo podem carregar duas cópias do typert-protocol — os marcadores de decoradores ficam invisíveis entre cópias (sintoma: toda chamada retorna 404). O registro estrito passa pelo registro compartilhado e contorna a identidade de instância do módulo. |
 | Navegador | `lib/client.js` | Monta o namespace remoto `pluginManager` pelo canal `ctx.get()` sem injeção (evita um deadlock de automontagem) e registra a aba no slot `settings.plugins.tab`. |
 

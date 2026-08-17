@@ -69,12 +69,13 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 | ✏️ UI 内メモ編集 | 各カードの「メモを編集」で中国語名/説明を編集（`~/.dsh/plugin-manager/catalog.json` に保存）。ワンクリックでデフォルトに復元 |
 | 🛡️ 安全ガード | ブートストラップ/トランスポート/設定シェルの行は「システム」としてロック。`!!js` 式の行は「式で制御」と表示 |
 | 🔍 検索とフィルタ | 名前/説明/モジュールで検索、カテゴリで絞り込み、有効数のサマリー |
+| 💾 バックアップと復元 | メモ + プラグイン一覧（プロファイルの依存関係/bundle）+ 有効化/無効化パッチを 1 つの JSON にエクスポート。インポートはマージ方式（既存エントリを削除しない）で、正確な再インストールコマンドを表示 |
 
 ## 仕組み
 
 | 側 | ファイル | 役割 |
 |----|----------|------|
-| ホスト | `lib/index.js` | `pluginManager` cordis サービス（Typert リモート）を登録: `list` / `setEnabled` / `setOverride` / `removeOverride`。切り替えはパッチファイルの外科的編集 — コメントと `!!js` 式を保持し、書き込み前に再読込して同時編集をマージ |
+| ホスト | `lib/index.js` | `pluginManager` cordis サービス（Typert リモート）を登録: `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`。切り替えはパッチファイルの外科的編集 — コメントと `!!js` 式を保持し、書き込み前に再読込して同時編集をマージ |
 | ホスト | `lib/typert.host.js` | `./typert` をエクスポートし、typert-loader が**厳密な呼び出し定義**として登録。重要な修正: tsx ソース起動時、ゲートウェイと外部プラグインが typert-protocol の別コピーを持つことがあり、デコレータマーカーがコピー間で見えない（症状: 全呼び出しが 404）。厳密登録は共有レジストリを経由し、モジュールインスタンスの同一性問題を回避 |
 | ブラウザ | `lib/client.js` | インジェクション不要の `ctx.get()` チャネルで `pluginManager` リモート名前空間をマウント（自己マウントのデッドロックを回避）し、`settings.plugins.tab` スロットにタブを登録 |
 

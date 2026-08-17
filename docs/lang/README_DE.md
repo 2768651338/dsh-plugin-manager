@@ -69,12 +69,13 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 | ✏️ Notizen in der UI | „Notizen bearbeiten“ an jeder Karte ändert den chinesischen Namen/die Beschreibung (`~/.dsh/plugin-manager/catalog.json`) mit Ein-Klick-Wiederherstellung |
 | 🛡️ Sicherungen | Bootstrap-/Transport-/Einstellungs-Shell-Zeilen als „System“ gesperrt; `!!js`-Ausdruckszeilen als „Ausdrucksgesteuert“ markiert |
 | 🔍 Suche & Filter | Suche nach Name/Beschreibung/Modul, Filter nach Kategorie, Übersicht der aktivierten Anzahl |
+| 💾 Backup & Wiederherstellung | Exportiert Notizen + Plugin-Liste (Profil-`dependencies`/`bundles`) + den Aktivieren/Deaktivieren-Patch in eine JSON-Datei; der Import führt eine Zusammenführung durch (entfernt keine vorhandenen Einträge) und zeigt den exakten Neuinstallationsbefehl |
 
 ## So funktioniert es
 
 | Hälfte | Datei | Rolle |
 |--------|-------|-------|
-| Host | `lib/index.js` | Registriert den cordis-Dienst `pluginManager` (Typert-Remote): `list` / `setEnabled` / `setOverride` / `removeOverride`. Schalter nutzen chirurgische Patch-Datei-Edits — Kommentare und `!!js`-Ausdrücke bleiben erhalten; vor dem Schreiben wird erneut gelesen, um parallele Edits zu verschmelzen. |
+| Host | `lib/index.js` | Registriert den cordis-Dienst `pluginManager` (Typert-Remote): `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`. Schalter nutzen chirurgische Patch-Datei-Edits — Kommentare und `!!js`-Ausdrücke bleiben erhalten; vor dem Schreiben wird erneut gelesen, um parallele Edits zu verschmelzen. |
 | Host | `lib/typert.host.js` | Exportiert `./typert`; der typert-loader registriert es als **strikte Aufrufdefinitionen**. Entscheidender Fix: Beim tsx-Source-Start können Gateway und externes Plugin zwei Kopien von typert-protocol halten — Dekorator-Marker sind kopienübergreifend unsichtbar (Symptom: jeder Aufruf liefert 404). Die strikte Registrierung läuft über die gemeinsame Registry und umgeht die Modul-Instanz-Identität. |
 | Browser | `lib/client.js` | Mountet den `pluginManager`-Remote-Namespace über den injektionsfreien `ctx.get()`-Kanal (vermeidet einen Selbst-Mount-Deadlock) und registriert den Tab im Slot `settings.plugins.tab`. |
 

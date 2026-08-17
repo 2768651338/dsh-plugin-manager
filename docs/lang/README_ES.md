@@ -69,12 +69,13 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 | ✏️ Notas en la interfaz | "Editar notas" en cada tarjeta edita el nombre/descripción en chino (`~/.dsh/plugin-manager/catalog.json`) con restauración de valores por defecto en un clic |
 | 🛡️ Protecciones | Filas de arranque/transporte/entorno de ajustes bloqueadas como "Sistema"; filas con expresiones `!!js` etiquetadas como "Controlado por expresión" |
 | 🔍 Búsqueda y filtro | Busca por nombre/descripción/módulo, filtra por categoría, resumen de habilitados |
+| 💾 Copia de seguridad y restauración | Exporta notas + lista de plugins (dependencias/bundles del perfil) + el parche de activación/desactivación a un JSON; la importación fusiona (nunca elimina tus entradas existentes) e imprime el comando exacto de reinstalación |
 
 ## Cómo funciona
 
 | Mitad | Archivo | Rol |
 |-------|---------|-----|
-| Host | `lib/index.js` | Registra el servicio cordis `pluginManager` (remoto Typert): `list` / `setEnabled` / `setOverride` / `removeOverride`. Los interruptores usan edición quirúrgica del archivo de parches — se conservan comentarios y expresiones `!!js`; el archivo se relee antes de escribir para fusionar ediciones concurrentes. |
+| Host | `lib/index.js` | Registra el servicio cordis `pluginManager` (remoto Typert): `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`. Los interruptores usan edición quirúrgica del archivo de parches — se conservan comentarios y expresiones `!!js`; el archivo se relee antes de escribir para fusionar ediciones concurrentes. |
 | Host | `lib/typert.host.js` | Exporta `./typert`; el typert-loader lo registra como **definiciones de invocación estrictas**. Corrección clave: en el arranque con código fuente tsx, el gateway y un plugin externo pueden cargar dos copias de typert-protocol — los marcadores de decoradores son invisibles entre copias (síntoma: todos los llamados devuelven 404). El registro estricto pasa por el registro compartido y evita el problema de identidad de instancia de módulo. |
 | Navegador | `lib/client.js` | Monta el espacio de nombres remoto `pluginManager` mediante el canal `ctx.get()` sin inyección (evita un bloqueo de auto-montaje) y registra la pestaña Plugin Manager en el slot `settings.plugins.tab`. |
 

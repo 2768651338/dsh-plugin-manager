@@ -69,12 +69,13 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 | ✏️ UI 메모 편집 | 각 카드의 “메모 편집”으로 중국어 이름/설명 수정(`~/.dsh/plugin-manager/catalog.json`에 저장), 원클릭 기본값 복원 |
 | 🛡️ 안전장치 | 부트스트랩/전송/설정 셸 행은 “시스템”으로 잠금; `!!js` 표현식 행은 “표현식 제어”로 표시 |
 | 🔍 검색과 필터 | 이름/설명/모듈로 검색, 카테고리 필터, 활성 개수 요약 |
+| 💾 백업과 복원 | 메모 + 플러그인 목록(프로필 의존성/번들) + 활성화/비활성화 패치를 JSON 하나로 내보내기; 가져오기는 병합(기존 항목을 삭제하지 않음)하고 정확한 재설치 명령을 표시 |
 
 ## 동작 원리
 
 | 절반 | 파일 | 역할 |
 |------|------|------|
-| 호스트 | `lib/index.js` | `pluginManager` cordis 서비스(Typert 원격) 등록: `list` / `setEnabled` / `setOverride` / `removeOverride`. 전환은 패치 파일 수술 편집 — 주석과 `!!js` 표현식 보존, 쓰기 전 재읽기로 동시 편집 병합 |
+| 호스트 | `lib/index.js` | `pluginManager` cordis 서비스(Typert 원격) 등록: `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`. 전환은 패치 파일 수술 편집 — 주석과 `!!js` 표현식 보존, 쓰기 전 재읽기로 동시 편집 병합 |
 | 호스트 | `lib/typert.host.js` | `./typert`를 내보내고 typert-loader가 **엄격한 호출 정의**로 등록. 핵심 수정: tsx 소스 실행 시 게이트웨이와 외부 플러그인이 typert-protocol 사본을 각각 가질 수 있고, 데코레이터 마커가 사본 간에 보이지 않음(증상: 모든 호출이 404). 엄격 등록은 공유 레지스트리를 거쳐 모듈 인스턴스 정체성 문제를 우회 |
 | 브라우저 | `lib/client.js` | 주입 없는 `ctx.get()` 채널로 `pluginManager` 원격 네임스페이스를 마운트(자체 마운트 교착 방지)하고 `settings.plugins.tab` 슬롯에 탭 등록 |
 
