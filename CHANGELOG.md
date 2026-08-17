@@ -2,6 +2,13 @@
 
 All notable changes to dsh-plugin-manager are documented here.
 
+## [0.4.1] — 2026-08-17
+
+- Fix peer ranges for `@deepseek-ai/dsh-typert-protocol` and `@deepseek-ai/dsh-client-ui-primitives`:
+  `*` → `>=0.1.0-rc.0`. DSH ships these as prerelease `0.1.0-rc.6`, and semver `*` does not match
+  prereleases, so pnpm printed a false "peer range does not match resolved" warning on install.
+- Document the peer-warning workaround in the Troubleshooting sections (EN/ZH).
+
 ## [0.4.0] — 2026-08-14
 
 - **Rename to the owner-controlled scope** `@2768651338/dsh-plugin-manager` (previously `@dsh-external/*`, which was not authorized).
