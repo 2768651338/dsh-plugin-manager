@@ -1,7 +1,7 @@
 {
   "name": "@2768651338/dsh-plugin-manager",
   "description": "插件管家——图形化插件管理：中文名与用途说明目录 + 一键启停（写入全局 cordis.patch.yml，实时热生效）",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "main": "lib/index.js",
@@ -50,7 +50,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsdown --config ./tsdown.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/patch-file.smoke.mjs && node tests/claims.e2e.mjs && node tests/gateway-path.e2e.mjs && node tests/host-gateway.e2e.mjs"
+    "test": "node tests/patch-file.smoke.mjs && node tests/backup.smoke.mjs && node tests/claims.e2e.mjs && node tests/gateway-path.e2e.mjs && node tests/host-gateway.e2e.mjs"
   },
   "files": [
     "lib/index.js",

@@ -9,9 +9,10 @@
  * @module dsh-plugin-manager
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { basename, dirname, join, resolve } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
@@ -22,8 +23,11 @@ import {
   SYSTEM_ROW_IDS,
   type PluginCategory,
 } from './catalog.ts'
-import { initialPatchFile, setRowDisabled } from './patch-file.ts'
+import { initialPatchFile, isExpression, parsePatchFile, setRowDisabled } from './patch-file.ts'
+import { buildBackupDocument, mergeBundles, mergeDependencies, mergeOverrides, validateBackupDocument } from './backup.ts'
 import type {
+  BackupExportResult,
+  BackupImportResult,
   CatalogEditResult,
   CatalogOverrides,
   PluginManagerEntry,
@@ -107,6 +111,38 @@ function tryRead(path: string): string | undefined {
   }
 }
 
+/** 把 file:// URL（或绝对路径）归一化为本地目录；非法/非本地时返回 undefined。 */
+function urlToDir(value: string): string | undefined {
+  try {
+    if (value.startsWith('file:')) return fileURLToPath(value)
+    if (/^[a-zA-Z]:[\\/]/.test(value) || value.startsWith('/') || value.startsWith('\\\\')) return value
+    return undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** profile 清单（package.json）的宽松形态：只关心读写的那几处，其余原样保留。 */
+interface ProfileManifest {
+  dependencies?: Record<string, string>
+  dsh?: { profile?: { bundles?: string[] }; [key: string]: unknown }
+  [key: string]: unknown
+}
+
+/** 读取 profile 清单；文件缺失或损坏时抛错（由调用方兜底）。 */
+function readProfileManifest(path: string): ProfileManifest {
+  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`profile 清单 ${path} 不是 JSON 对象`)
+  }
+  return parsed as ProfileManifest
+}
+
+/** 写回 profile 清单（2 空格缩进 + 末尾换行，与 dsh 的 writeProfileManifest 一致）。 */
+function writeProfileManifest(path: string, manifest: ProfileManifest): void {
+  writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n', 'utf8')
+}
+
 /** 目录缺失时的兜底分类。 */
 const OTHER_CATEGORY = 'other' as PluginCategory
 
@@ -133,8 +169,22 @@ export class PluginManagerGateway extends TypertRemoteService {
     return undefined
   }
 
+  /** 定位当前 profile 目录：优先取 Loader 的 baseUrl（profile boot 会设成 profile 目录）。 */
+  private profileDir(): string | undefined {
+    const loaderCtx = (this.ctx.loader as unknown as { ctx?: { baseUrl?: unknown } } | undefined)?.ctx
+    const rootBase = (this.ctx as unknown as { baseUrl?: unknown }).baseUrl
+    const baseUrl = loaderCtx?.baseUrl ?? rootBase
+    if (typeof baseUrl !== 'string') return undefined
+    const dir = urlToDir(baseUrl)
+    if (dir === undefined) return undefined
+    return existsSync(join(dir, 'package.json')) ? dir : undefined
+  }
+
   /** 串行化覆盖文件写操作。 */
   private overrideQueue: Promise<void> = Promise.resolve()
+
+  /** 串行化备份/恢复的文件写操作。 */
+  private restoreQueue: Promise<void> = Promise.resolve()
 
   /** 把覆盖表原子化写入 catalog.json（目录缺失时创建）。 */
   private writeOverrides(overrides: CatalogOverrides): void {
@@ -318,6 +368,112 @@ export class PluginManagerGateway extends TypertRemoteService {
 
     const queued = this.toggleQueue.then(run, run)
     this.toggleQueue = queued.then(() => {}, () => {})
+    return queued
+  }
+
+  /** 导出备份：备注覆盖 + profile 依赖/bundles + 全局启停补丁。 */
+  @Remote('exportBackup')
+  exportBackup(): BackupExportResult {
+    try {
+      const profileDir = this.profileDir()
+      if (profileDir === undefined) {
+        return { accepted: false, reason: 'profile-not-found', message: '无法定位当前 profile 目录（缺少 package.json）' }
+      }
+      const manifest = readProfileManifest(join(profileDir, 'package.json'))
+      const document = buildBackupDocument({
+        profile: basename(profileDir),
+        overrides: readOverrides(),
+        dependencies: manifest.dependencies ?? {},
+        bundles: manifest.dsh?.profile?.bundles ?? [],
+        patchFile: tryRead(globalPatchPath()),
+      })
+      return { accepted: true, document }
+    } catch (error) {
+      return { accepted: false, reason: 'io-error', message: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  /** 导入备份：恢复备注 + profile 依赖/bundles + 全局启停补丁（合并，保留当前独有条目）。 */
+  @Remote('importBackup')
+  importBackup(json: string): Promise<BackupImportResult> {
+    const run = async (): Promise<BackupImportResult> => {
+      try {
+        let parsed: unknown
+        try {
+          parsed = JSON.parse(json)
+        } catch {
+          return { accepted: false, reason: 'invalid-format', message: '备份文件不是合法的 JSON' }
+        }
+        const validation = validateBackupDocument(parsed)
+        if (!validation.ok) {
+          return { accepted: false, reason: 'invalid-format', message: validation.reason }
+        }
+        const doc = validation.document
+
+        const profileDir = this.profileDir()
+        if (profileDir === undefined) {
+          return { accepted: false, reason: 'profile-not-found', message: '无法定位当前 profile 目录（缺少 package.json）' }
+        }
+
+        // 1) 备注覆盖
+        const overrides = readOverrides()
+        const overMerged = mergeOverrides(overrides, doc.overrides)
+        this.writeOverrides(overMerged.merged)
+
+        // 2) profile 清单：依赖 + bundles
+        const manifestPath = join(profileDir, 'package.json')
+        const manifest = readProfileManifest(manifestPath)
+        const depsMerged = mergeDependencies(manifest.dependencies ?? {}, doc.dependencies)
+        const bundlesMerged = mergeBundles(manifest.dsh?.profile?.bundles ?? [], doc.bundles)
+        writeProfileManifest(manifestPath, {
+          ...manifest,
+          dependencies: depsMerged.merged,
+          dsh: {
+            ...manifest.dsh,
+            profile: {
+              ...manifest.dsh?.profile,
+              bundles: bundlesMerged.merged,
+            },
+          },
+        })
+
+        // 3) 全局启停补丁（合并：按行应用备份里的启停状态，保留当前其余行）
+        let patchRowsRestored = 0
+        if (doc.patchFile !== undefined) {
+          const patchPath = globalPatchPath()
+          let content = tryRead(patchPath) ?? initialPatchFile()
+          for (const row of parsePatchFile(doc.patchFile)) {
+            if (row.id === null || row.disabledValue === null) continue
+            if (isExpression(row.disabledValue)) continue
+            const enabled = row.disabledValue !== 'true'
+            const edited = setRowDisabled(content, row.id, enabled)
+            if (edited.blocked === 'expression') continue
+            if (edited.changed) {
+              content = edited.content
+              patchRowsRestored += 1
+            }
+          }
+          if (patchRowsRestored > 0) writeFileSync(patchPath, content, 'utf8')
+        }
+
+        const profileName = basename(profileDir)
+        return {
+          accepted: true,
+          detail: {
+            overridesRestored: overMerged.changed,
+            dependenciesRestored: depsMerged.changed,
+            bundlesRestored: bundlesMerged.changed,
+            patchRowsRestored,
+          },
+          installCommand: `dsh plugin --profile ${profileName} install`,
+          restartRequired: true,
+        }
+      } catch (error) {
+        return { accepted: false, reason: 'io-error', message: error instanceof Error ? error.message : String(error) }
+      }
+    }
+    const queued = this.restoreQueue.then(run, run)
+    this.restoreQueue = queued.then(() => {}, () => {})
     return queued
   }
 }

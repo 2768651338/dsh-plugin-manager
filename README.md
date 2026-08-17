@@ -112,8 +112,8 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 
 | Scope | What it touches |
 |-------|-----------------|
-| Files (read) | `cordis.patch.yml`, `plugin-manager/catalog.json`, and the in-process loader plugin list |
-| Files (write) | `~/.dsh/cordis.patch.yml` (toggle rows), `~/.dsh/plugin-manager/catalog.json` (notes) — both inside the DSH home only |
+| Files (read) | `cordis.patch.yml`, `plugin-manager/catalog.json`, the in-process loader plugin list, and the profile `package.json` (backup) |
+| Files (write) | `~/.dsh/cordis.patch.yml` (toggle rows), `~/.dsh/plugin-manager/catalog.json` (notes), and the profile `package.json` (restore) — inside the DSH home only |
 | Network | None. The browser half talks only to your local DSH `/api` RPC endpoint |
 | Credentials | Never read |
 | User data | Never read (no access to sessions, messages, or prompts) |
@@ -127,12 +127,13 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 | ✏️ In-UI notes | "Edit notes" on each card edits the Chinese name/description (`~/.dsh/plugin-manager/catalog.json`), with one-click restore-to-default |
 | 🛡️ Safety guards | Bootstrap/transport/settings-shell rows locked as "System"; `!!js`-expression rows labeled "Expression-controlled" |
 | 🔍 Search & filter | Search by name/description/module, filter by category, enabled-count summary |
+| 💾 Backup & restore | Export notes + plugin list (profile `dependencies`/`bundles`) + the enable/disable patch to one JSON file; import merges (never removes your existing entries) and prints the exact reinstall command |
 
 ## How It Works
 
 | Half | File | Role |
 |------|------|------|
-| Host | `lib/index.js` | Registers the `pluginManager` cordis service (Typert remote): `list` / `setEnabled` / `setOverride` / `removeOverride`. Toggles use surgical patch-file editing — comments and `!!js` expressions preserved, file re-read before write to merge concurrent edits. |
+| Host | `lib/index.js` | Registers the `pluginManager` cordis service (Typert remote): `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`. Toggles use surgical patch-file editing — comments and `!!js` expressions preserved, file re-read before write to merge concurrent edits. |
 | Host | `lib/typert.host.js` | Exports `./typert`; the typert-loader registers it as **strict invocation definitions**. Crucial fix: under tsx source launch the gateway and an external plugin can hold two copies of typert-protocol — decorator markers are invisible across copies (symptom: every call 404s). Strict registration goes through the shared registry, sidestepping module-instance identity. |
 | Browser | `lib/client.js` | Mounts the `pluginManager` remote namespace via the inject-free `ctx.get()` channel (avoids a self-mount deadlock) and registers the Plugin Manager tab in the `settings.plugins.tab` slot. |
 

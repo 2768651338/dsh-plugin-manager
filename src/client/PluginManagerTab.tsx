@@ -1,9 +1,9 @@
 /** 插件管家标签页：中文目录 + 一键启停 + 搜索/分类过滤。 */
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { IconSearchOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { CatalogEditResult, PluginManagerEntry, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
+import type { BackupExportResult, BackupImportResult, CatalogEditResult, PluginManagerEntry, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
 import type { PluginManagerLocaleKey } from './locales.ts'
 import css from './PluginManagerTab.module.css'
 
@@ -13,6 +13,8 @@ export interface PluginManagerTabInjected {
   setEnabled: (entryId: string, enabled: boolean) => Promise<SetEnabledResult>
   setOverride: (moduleName: string, name: string, desc: string) => Promise<CatalogEditResult>
   removeOverride: (moduleName: string) => Promise<CatalogEditResult>
+  exportBackup: () => Promise<BackupExportResult>
+  importBackup: (json: string) => Promise<BackupImportResult>
 }
 
 /** 设置槽位渲染器组装的完整 props。 */
@@ -47,6 +49,24 @@ function format(template: string, values: Readonly<Record<string, string | numbe
   return template.replace(/\{(\w+)\}/g, (_all, key: string) => String(values[key] ?? ''))
 }
 
+/** 触发浏览器下载一段文本（备份 JSON）。 */
+function downloadJson(filename: string, text: string): void {
+  const blob = new Blob([text], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+  URL.revokeObjectURL(url)
+}
+
+/** 文件名友好的时间戳（不含非法字符）。 */
+function dateStamp(): string {
+  return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+}
+
 /** 搜索是否命中。 */
 function matches(entry: PluginManagerEntry, normalizedQuery: string): boolean {
   if (normalizedQuery.length === 0) return true
@@ -61,7 +81,7 @@ const AUTO_REFRESH_MS = 900
 const FALLBACK_DESC = '该插件暂无内置说明，可在覆盖文件中补充自定义说明。'
 
 /** 渲染插件管家标签页。 */
-export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride, t }: PluginManagerTabProps): ReactNode {
+export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride, exportBackup, importBackup, t }: PluginManagerTabProps): ReactNode {
   const [request, setRequest] = useState(0)
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
@@ -71,6 +91,10 @@ export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draftName, setDraftName] = useState('')
   const [draftDesc, setDraftDesc] = useState('')
+  const [backupBusy, setBackupBusy] = useState(false)
+  const [restoreBusy, setRestoreBusy] = useState(false)
+  const [backupMessage, setBackupMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const selectId = useId()
 
@@ -232,6 +256,58 @@ export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride
         next.delete(entry.entryId)
         return next
       })
+    }
+  }
+
+  const doBackup = async (): Promise<void> => {
+    if (backupBusy) return
+    setBackupBusy(true)
+    setBackupMessage(null)
+    try {
+      const result = await exportBackup()
+      if (!result.accepted || result.document === undefined) {
+        setBackupMessage({ kind: 'error', text: format(t('backupFailed'), { message: result.message ?? result.reason ?? '' }) })
+        return
+      }
+      downloadJson(`dsh-plugin-manager-backup-${result.document.profile}-${dateStamp()}.json`, JSON.stringify(result.document, null, 2))
+      setBackupMessage({ kind: 'success', text: t('backupSucceeded') })
+    } catch (error) {
+      setBackupMessage({ kind: 'error', text: format(t('backupFailed'), { message: error instanceof Error ? error.message : String(error) }) })
+    } finally {
+      setBackupBusy(false)
+    }
+  }
+
+  const handleRestoreFile = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = event.currentTarget.files?.[0]
+    event.currentTarget.value = ''
+    if (file === undefined || restoreBusy) return
+    setRestoreBusy(true)
+    setBackupMessage(null)
+    try {
+      const text = await file.text()
+      const result = await importBackup(text)
+      if (!result.accepted) {
+        setBackupMessage({ kind: 'error', text: format(t('restoreFailed'), { message: result.message ?? result.reason ?? '' }) })
+        return
+      }
+      const detail = result.detail
+      if (detail === undefined) {
+        setBackupMessage({ kind: 'success', text: t('restoreNoChange') })
+      } else {
+        setBackupMessage({ kind: 'success', text: format(t('restoreSucceeded'), {
+          overrides: detail.overridesRestored,
+          dependencies: detail.dependenciesRestored,
+          bundles: detail.bundlesRestored,
+          patches: detail.patchRowsRestored,
+          command: result.installCommand ?? '',
+        }) })
+      }
+      setRequest(value => value + 1)
+    } catch (error) {
+      setBackupMessage({ kind: 'error', text: format(t('restoreFailed'), { message: error instanceof Error ? error.message : String(error) }) })
+    } finally {
+      setRestoreBusy(false)
     }
   }
 
@@ -419,6 +495,31 @@ export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride
           ) : null}
 
           <div className={css.footer}>
+            <div className={css.backupBar}>
+              <h4>{t('backupHeading')}</h4>
+              <p className={css.hint}>{t('backupIntro')}</p>
+              <div className={css.backupActions}>
+                <button type="button" className={css.backupButton} disabled={backupBusy} onClick={() => { void doBackup() }}>
+                  {backupBusy ? t('backupBusy') : t('backup')}
+                </button>
+                <button type="button" className={css.importButton} disabled={restoreBusy} onClick={() => { fileInputRef.current?.click() }}>
+                  {restoreBusy ? t('restoreBusy') : t('restore')}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className={css.visuallyHidden}
+                  aria-label={t('restoreSelect')}
+                  onChange={(event) => { void handleRestoreFile(event) }}
+                />
+              </div>
+              {backupMessage !== null ? (
+                <p className={css.message} data-kind={backupMessage.kind === 'error' ? 'result' : undefined} role="status">
+                  {backupMessage.text}
+                </p>
+              ) : null}
+            </div>
             <p className={css.hint}>{t('refreshHint')}</p>
             <dl className={css.paths}>
               <div>

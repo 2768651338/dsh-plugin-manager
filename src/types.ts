@@ -79,3 +79,58 @@ export interface CatalogOverrides {
     desc?: string
   }
 }
+
+/** 备份文档：一次导出备份的完整数据（可读 JSON，换机导入）。 */
+export interface BackupDocument {
+  /** 固定格式标识，用于区分非本插件的 JSON 文件。 */
+  readonly format: 'dsh-plugin-manager-backup'
+  /** 备份格式版本号。 */
+  readonly version: number
+  /** 导出时间（ISO 8601）。 */
+  readonly createdAt: string
+  /** 来源 profile 名（如 web）。 */
+  readonly profile: string
+  /** 备注覆盖表（catalog.json 的完整内容）。 */
+  readonly overrides: CatalogOverrides
+  /** profile 依赖：模块名 → 安装 spec（版本 / git / file）。 */
+  readonly dependencies: Record<string, string>
+  /** profile 的 dsh.profile.bundles 列表。 */
+  readonly bundles: readonly string[]
+  /** 全局启停补丁（cordis.patch.yml）的原始内容；缺省表示不备份启停状态。 */
+  readonly patchFile?: string
+}
+
+/** exportBackup 的结果。 */
+export interface BackupExportResult {
+  readonly accepted: boolean
+  /** 拒绝原因：profile-not-found / io-error。 */
+  readonly reason?: string
+  readonly message?: string
+  /** 成功时的完整备份文档。 */
+  readonly document?: BackupDocument
+}
+
+/** importBackup 恢复成功的明细计数。 */
+export interface BackupRestoreDetail {
+  /** 恢复的备注条数。 */
+  readonly overridesRestored: number
+  /** 恢复/变更的依赖条数。 */
+  readonly dependenciesRestored: number
+  /** 追加到 bundles 的条数。 */
+  readonly bundlesRestored: number
+  /** 应用回启停补丁的行数。 */
+  readonly patchRowsRestored: number
+}
+
+/** importBackup 的结果。 */
+export interface BackupImportResult {
+  readonly accepted: boolean
+  /** 拒绝原因：invalid-format / profile-not-found / io-error。 */
+  readonly reason?: string
+  readonly message?: string
+  readonly detail?: BackupRestoreDetail
+  /** 恢复插件清单后，用户应执行的安装命令（无需每次成功都给出）。 */
+  readonly installCommand?: string
+  /** 是否需要重启 DSH 使新 bundle 生效。 */
+  readonly restartRequired?: boolean
+}

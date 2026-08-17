@@ -111,8 +111,8 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 
 | 范围 | 涉及内容 |
 |------|----------|
-| 读取文件 | `cordis.patch.yml`、`plugin-manager/catalog.json`、进程内插件清单 |
-| 写入文件 | 仅 DSH 目录内的 `~/.dsh/cordis.patch.yml`（启停行）与 `~/.dsh/plugin-manager/catalog.json`（备注） |
+| 读取文件 | `cordis.patch.yml`、`plugin-manager/catalog.json`、进程内插件清单，以及 profile 的 `package.json`（备份） |
+| 写入文件 | 仅 DSH 目录内的 `~/.dsh/cordis.patch.yml`（启停行）、`~/.dsh/plugin-manager/catalog.json`（备注）与 profile 的 `package.json`（恢复） |
 | 网络 | 无外网访问；浏览器半仅与本地 DSH 的 `/api` RPC 端点通信 |
 | 凭据 | 从不读取 |
 | 用户数据 | 从不读取（不接触会话、消息、提示词） |
@@ -126,6 +126,7 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 | ✏️ 界面内备注 | 卡片上的「编辑备注」直接改中文名/说明（保存到 `~/.dsh/plugin-manager/catalog.json`），支持一键恢复默认 |
 | 🛡️ 防呆保护 | 引导/传输/设置外壳等系统行不可停用；!!js 表达式控制的行标注「表达式控制」 |
 | 🔍 搜索与分类 | 按名称/说明/模块名搜索，按分类过滤，统计启用数 |
+| 💾 备份与恢复 | 把备注 + 插件清单（profile 依赖/bundles）+ 启停补丁导出为单个 JSON；导入采用合并（不删除已有条目），并给出精确的重装命令 |
 
 ## 工作原理
 

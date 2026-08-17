@@ -2,6 +2,15 @@
 
 All notable changes to dsh-plugin-manager are documented here.
 
+## [0.5.0] — 2026-08-17
+
+- Add **backup / restore**: export notes (catalog.json overrides) and the plugin list
+  (profile `dependencies` + `dsh.profile.bundles`) plus the global enable/disable patch
+  into a single readable JSON file, and import it back on another machine.
+- Restore merges rather than replaces: incoming entries override current ones while
+  entries you already have are kept, and the enable/disable patch is applied row-by-row.
+- After a restore the tab shows the exact `dsh plugin --profile <name> install` command
+  to materialize the restored plugin list, plus a restart reminder.
 ## [0.4.1] — 2026-08-17
 
 - Fix peer ranges for `@deepseek-ai/dsh-typert-protocol` and `@deepseek-ai/dsh-client-ui-primitives`:

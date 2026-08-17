@@ -13,7 +13,7 @@ import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { RemoteResult, TypertRemoteNamespaceMap } from '@deepseek-ai/dsh-typert-protocol'
-import type { CatalogEditResult, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
+import type { BackupExportResult, BackupImportResult, CatalogEditResult, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
 import { PluginManagerTab, type PluginManagerTabInjected } from './PluginManagerTab.tsx'
 import { en, zh } from './locales.ts'
 import { TYPERT_REMOTE } from './remote.ts'
@@ -73,7 +73,21 @@ export async function apply(ctx: ClientContext): Promise<void> {
     }
     return result.value
   }
-  const injected = (): PluginManagerTabInjected => ({ list, setEnabled, setOverride, removeOverride })
+  const exportBackup: PluginManagerTabInjected['exportBackup'] = async () => {
+    const result: RemoteResult<BackupExportResult> = await namespace().exportBackup()
+    if (!result.ok) {
+      throw new Error(`pluginManager.exportBackup failed: ${result.error.code}: ${result.error.message}`)
+    }
+    return result.value
+  }
+  const importBackup: PluginManagerTabInjected['importBackup'] = async (json) => {
+    const result: RemoteResult<BackupImportResult> = await namespace().importBackup(json)
+    if (!result.ok) {
+      throw new Error(`pluginManager.importBackup failed: ${result.error.code}: ${result.error.message}`)
+    }
+    return result.value
+  }
+  const injected = (): PluginManagerTabInjected => ({ list, setEnabled, setOverride, removeOverride, exportBackup, importBackup })
 
   // 3) 注册标签页（排在“插件列表”之后）。
   ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({

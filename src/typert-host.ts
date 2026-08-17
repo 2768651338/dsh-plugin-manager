@@ -56,6 +56,43 @@ const catalogEditResult$schema = z.object({
   'message': z.string().optional(),
 })
 
+const backupDocument$schema = z.object({
+  'format': z.literal('dsh-plugin-manager-backup'),
+  'version': z.number(),
+  'createdAt': z.string(),
+  'profile': z.string(),
+  'overrides': z.record(z.string(), z.object({
+    'name': z.string().optional(),
+    'desc': z.string().optional(),
+  })),
+  'dependencies': z.record(z.string(), z.string()),
+  'bundles': z.array(z.string()).readonly(),
+  'patchFile': z.string().optional(),
+})
+
+const backupExportResult$schema = z.object({
+  'accepted': z.boolean(),
+  'reason': z.string().optional(),
+  'message': z.string().optional(),
+  'document': backupDocument$schema.optional(),
+})
+
+const backupRestoreDetail$schema = z.object({
+  'overridesRestored': z.number(),
+  'dependenciesRestored': z.number(),
+  'bundlesRestored': z.number(),
+  'patchRowsRestored': z.number(),
+})
+
+const backupImportResult$schema = z.object({
+  'accepted': z.boolean(),
+  'reason': z.string().optional(),
+  'message': z.string().optional(),
+  'detail': backupRestoreDetail$schema.optional(),
+  'installCommand': z.string().optional(),
+  'restartRequired': z.boolean().optional(),
+})
+
 const PACKAGE = '@2768651338/dsh-plugin-manager'
 
 /** 主机面工件：typert-loader 自动注册（entry 的 package.json exports["./typert"]）。 */
@@ -158,6 +195,41 @@ export const TYPERT = {
         schema: catalogEditResult$schema,
       },
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 4, column: 1 },
+    },
+    {
+      id: PACKAGE + '#pluginManager/exportBackup',
+      service: 'pluginManager',
+      namespace: 'pluginManager',
+      method: 'exportBackup',
+      invocation: { kind: 'direct' },
+      parameters: [],
+      result: {
+        mode: 'strict',
+        typeSymbol: '@2768651338/dsh-plugin-manager/types#BackupExportResult',
+        schema: backupExportResult$schema,
+      },
+      sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 5, column: 1 },
+    },
+    {
+      id: PACKAGE + '#pluginManager/importBackup',
+      service: 'pluginManager',
+      namespace: 'pluginManager',
+      method: 'importBackup',
+      invocation: { kind: 'direct' },
+      parameters: [
+        {
+          name: 'json',
+          wire: 'json',
+          source: 'json',
+          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+        },
+      ],
+      result: {
+        mode: 'strict',
+        typeSymbol: '@2768651338/dsh-plugin-manager/types#BackupImportResult',
+        schema: backupImportResult$schema,
+      },
+      sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 6, column: 1 },
     },
   ],
   model: {
