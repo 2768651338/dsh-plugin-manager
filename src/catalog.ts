@@ -163,7 +163,7 @@ export const CATALOG: Readonly<Record<string, CatalogEntry>> = {
   ["@deepseek-ai/dsh-client-ui-user-questions"]: { name: "提问界面", desc: "ask_user_question 的输入框接管提问 UI", category: "ui" as PluginCategory },
   ["@deepseek-ai/dsh-client-ui-trajectory"]: { name: "轨迹视图", desc: "交互式时序轨迹事件总览", category: "ui" as PluginCategory },
   ["@deepseek-ai/dsh-agent-presets"]: { name: "Agent 预设引擎", desc: "按预设 cordis.yml 组合每个会话的 Agent", category: "agent" as PluginCategory },
-  // ===== PerryLink 40 条中文名/描述（数据源：PerryLink/dsh-catalog data/packages.json + 各仓库 README/npm registry 实测）=====
+  // ===== PerryLink 插件中文名/描述（数据源：PerryLink/dsh-catalog data/packages.json + 各仓库 README/npm registry 实测）=====
   // 键 = 模块名（npm 包名，即 cordis 行 name）；category 按功能分组（维护者可整组改 external）。
   ["dsh-auto-review"]: { name: "自动审查", desc: "审批链上的第二模型自动审查：只读 reviewer 子代理给出 allow/deny 结构化判定，默认 fail-closed，全程会话日志可审计。", category: "agent" as PluginCategory },
   ["dsh-permission-rules"]: { name: "权限规则", desc: "声明式有序 allow/deny/ask 权限规则：匹配工具名、参数（glob/正则）、工作区路径与网络目标（域名/IP/端口/协议），外加 Codex 风格进程级网络策略。", category: "sandbox" as PluginCategory },
@@ -203,8 +203,7 @@ export const CATALOG: Readonly<Record<string, CatalogEntry>> = {
   ["@perrylink/dsh-cert-mcp"]: { name: "认证 MCP", desc: "只读 MCP 服务器：暴露插件认证等级、快照与五维证据。", category: "tool" as PluginCategory },
   ["dsh-reach"]: { name: "触达", desc: "多通道决策与遥控桥：审批/提问卡片镜像到 IM（微信 iLink、Telegram、飞书），#token 稳定 id，聊天内直接应答。", category: "tool" as PluginCategory },
   ["dsh-autotier"]: { name: "自动分档", desc: "强/便宜模型分档路由：意图门控落档、计划模式交接（强档规划便宜档执行）、工具/执行前高危守卫、TTL 回退。", category: "llm" as PluginCategory },
-  // dsh-plugin-upgrade: skip (not in master table)
-  ["dsh-plugin-upgrade-rc1"]: { name: "升级技能 0.1.5-rc.1", desc: "0.1.5-alpha.1 → 0.1.5-rc.1 走廊的版本卡片 + 11 缝扫描器（015 已覆盖同走廊，本条为历史包）。", category: "skill" as PluginCategory },
+  // dsh-plugin-upgrade: skip (not in master table)；dsh-plugin-upgrade-rc1 为一次性历史迁移包，不入目录
   ["@dsh-external/dsh-navbar"]: { name: "对话导航条", desc: "对话区右缘的消息节点导航（第三方插件）", category: "external" as PluginCategory },
 }
 
