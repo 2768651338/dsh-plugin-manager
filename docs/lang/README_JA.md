@@ -130,7 +130,7 @@ node tests/claims.e2e.mjs         # 通常 node と tsx ソース起動でのエ
 
 - ブラウザ側プラグイン（ui-* / client-*）の無効化は、ページを更新するまで完全には反映されません;
 - パッチファイルを手で編集する場合は行ブロック構造（列 0 の `- ` ダッシュ）を保ってください;
-- アンインストール: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`。
+- アンインストール: `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`。
 
 ---
 

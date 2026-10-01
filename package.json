@@ -1,8 +1,7 @@
 {
-  "name": "@2768651338/dsh-plugin-manager",
+  "name": "@txc2768651338/dsh-plugin-manager",
   "description": "插件管家——图形化插件管理：中文名与用途说明目录 + 一键启停（写入全局 cordis.patch.yml，实时热生效）",
   "version": "0.7.0",
-  "private": true,
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -60,6 +59,13 @@
     "README.md"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2768651338/dsh-plugin-manager.git"
+  },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/cordis-plugin-loader": "1.0.5",

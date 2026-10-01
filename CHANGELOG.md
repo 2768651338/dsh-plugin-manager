@@ -46,6 +46,15 @@ All notable changes to dsh-plugin-manager are documented here.
     official sidebar panel is a separate surface and may coexist.
 - Browser-half live check on a real running DSH 0.2.0 remains a manual step
   (restart DSH Desktop, Ctrl+F5, open the Plugin Manager tab).
+- **Package renamed to `@txc2768651338/dsh-plugin-manager` and first npm
+  publish** — an npm scope must match the publishing account, and
+  `2768651338` is not an npm account the author controls, so the
+  owner-controlled scope follows the npm username. The cordis row `name`,
+  typert invocation/codec ids, and the self-protection entry move with it;
+  existing GitHub installs pick the renamed row up on the next
+  `dsh plugin --profile web update`. GitHub installs keep working unchanged;
+  the npm package makes the plugin installable from the 1024 Store
+  (`dsh1024 plugin --profile web add @txc2768651338/dsh-plugin-manager`).
 
 ## [0.6.0] — 2026-10-01
 

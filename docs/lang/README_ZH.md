@@ -86,7 +86,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 |------|------|
 | 升级 | `dsh plugin --profile web update`（或重新执行 add 命令），然后重启 DSH |
 | 临时禁用 | 在插件管家自己的卡片上点「停用」——行仍在，随时可重新启用 |
-| 彻底移除 | `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`，若补丁文件中有它写入的行块则一并删除 |
+| 彻底移除 | `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`，若补丁文件中有它写入的行块则一并删除 |
 
 ## 快速上手
 

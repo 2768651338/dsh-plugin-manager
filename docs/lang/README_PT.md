@@ -130,7 +130,7 @@ node tests/claims.e2e.mjs         # registro de endpoints sob node simples e ini
 
 - Desativar plugins do lado do navegador (ui-* / client-*) só é totalmente aplicado após atualizar a página;
 - Ao editar o arquivo de patch à mão, mantenha a estrutura de blocos de linhas (um hífen `- ` na coluna 0);
-- Desinstalar: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
+- Desinstalar: `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`.
 
 ---
 

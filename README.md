@@ -96,7 +96,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 |--------|---------|
 | Upgrade | `dsh plugin --profile web update` (or re-run the `add` command), then restart DSH |
 | Disable (temporarily) | Click **停用/Disable** on the plugin's own card in Plugin Manager — the row stays installed |
-| Remove | `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`, then remove its rows from `cordis.patch.yml` if any |
+| Remove | `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`, then remove its rows from `cordis.patch.yml` if any |
 
 ## Quick Start
 

@@ -12,7 +12,7 @@ import { TypertGatewayService } from '@deepseek-ai/dsh-api-gateway'
 
 const tempHome = mkdtempSync(join(tmpdir(), 'dsh-pm-gw-'))
 process.env.DSH_HOME = tempHome
-const pluginUrl = import.meta.resolve('@2768651338/dsh-plugin-manager')
+const pluginUrl = import.meta.resolve('@txc2768651338/dsh-plugin-manager')
 const configPath = join(tempHome, 'cordis.yml')
 writeFileSync(configPath, [
   '- id: plugin-manager',

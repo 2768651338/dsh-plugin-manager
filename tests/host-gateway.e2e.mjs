@@ -10,7 +10,7 @@ import { boot } from '@deepseek-ai/dsh-app-boot'
 const tempHome = mkdtempSync(join(tmpdir(), 'dsh-pm-e2e-'))
 process.env.DSH_HOME = tempHome
 const configPath = join(tempHome, 'cordis.yml')
-const pluginUrl = import.meta.resolve('@2768651338/dsh-plugin-manager')
+const pluginUrl = import.meta.resolve('@txc2768651338/dsh-plugin-manager')
 writeFileSync(configPath, [
   '- id: plugin-manager',
   `  name: '${pluginUrl}'`,

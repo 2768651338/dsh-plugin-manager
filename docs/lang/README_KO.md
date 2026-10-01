@@ -130,7 +130,7 @@ node tests/claims.e2e.mjs         # 일반 node 및 tsx 소스 실행에서의 �
 
 - 브라우저 측 플러그인(ui-* / client-*) 비활성화는 페이지를 새로고침해야 완전히 반영됩니다;
 - 패치 파일을 손으로 편집할 때는 행 블록 구조(열 0의 `- ` 대시)를 유지하세요;
-- 제거: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
+- 제거: `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`.
 
 ---
 

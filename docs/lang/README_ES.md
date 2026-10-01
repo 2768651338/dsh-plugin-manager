@@ -130,7 +130,7 @@ node tests/claims.e2e.mjs         # reclamación de endpoints bajo node plano y 
 
 - Desactivar plugins del lado del navegador (ui-* / client-*) solo se descarga por completo tras refrescar la página;
 - Al editar el archivo de parches a mano, conserva la estructura de bloques (un guion `- ` en la columna 0);
-- Desinstalar: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
+- Desinstalar: `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`.
 
 ---
 

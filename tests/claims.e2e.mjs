@@ -13,7 +13,7 @@ const selfUrl = (specifier) => import.meta.resolve(specifier)
 const typertUrl = selfUrl('@deepseek-ai/dsh-typert-registry')
 const typertLoaderUrl = selfUrl('@deepseek-ai/dsh-typert-loader')
 const gatewayUrl = selfUrl('@deepseek-ai/dsh-api-gateway')
-const pluginUrl = selfUrl('@2768651338/dsh-plugin-manager')
+const pluginUrl = selfUrl('@txc2768651338/dsh-plugin-manager')
 const configPath = join(tempHome, 'cordis.yml')
 writeFileSync(configPath, [
   '- id: typert',

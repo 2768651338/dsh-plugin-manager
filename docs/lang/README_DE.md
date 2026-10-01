@@ -130,7 +130,7 @@ node tests/claims.e2e.mjs         # Endpunkt-Beanspruchung unter plain node und 
 
 - Das Deaktivieren browserseitiger Plugins (ui-* / client-*) wird erst nach einem Seiten-Refresh vollständig wirksam;
 - Beim manuellen Bearbeiten der Patch-Datei die Zeilenblock-Struktur beibehalten (ein `- ` Bindestrich in Spalte 0);
-- Deinstallation: `dsh plugin --profile web remove @2768651338/dsh-plugin-manager`.
+- Deinstallation: `dsh plugin --profile web remove @txc2768651338/dsh-plugin-manager`.
 
 ---
 
