@@ -1,11 +1,21 @@
 /** 插件管家标签页：中文目录 + 一键启停 + 搜索/分类过滤。 */
 
 import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
-import { IconSearchOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { BackupExportResult, BackupImportResult, CatalogEditResult, PluginManagerEntry, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
 import type { PluginManagerLocaleKey } from './locales.ts'
 import css from './PluginManagerTab.module.css'
+
+/** 16px 搜索图标（内联 SVG）：0.2.0 的 ui-primitives 移除了通用图标族，
+ * 且图标包不在宿主冻结模块表内（外部化会在浏览器端 require 失败），故自带。 */
+function SearchIcon(): ReactNode {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="7" cy="7" r="4.6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M10.6 10.6 14 14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 /** 注册侧注入面：远程服务已解包（unwrap RemoteResult）。 */
 export interface PluginManagerTabInjected {
@@ -327,7 +337,7 @@ export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride
         <div className={css.catalog}>
           <div className={css.toolbar}>
             <label className={css.search}>
-              <IconSearchOutline16 aria-hidden="true" />
+              <SearchIcon />
               <span className={css.visuallyHidden}>{t('search')}</span>
               <input
                 type="search"

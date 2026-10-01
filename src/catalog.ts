@@ -205,6 +205,34 @@ export const CATALOG: Readonly<Record<string, CatalogEntry>> = {
   ["dsh-autotier"]: { name: "自动分档", desc: "强/便宜模型分档路由：意图门控落档、计划模式交接（强档规划便宜档执行）、工具/执行前高危守卫、TTL 回退。", category: "llm" as PluginCategory },
   // dsh-plugin-upgrade: skip (not in master table)；dsh-plugin-upgrade-rc1 为一次性历史迁移包，不入目录
   ["@dsh-external/dsh-navbar"]: { name: "对话导航条", desc: "对话区右缘的消息节点导航（第三方插件）", category: "external" as PluginCategory },
+  // ===== DSH 0.2.0 新增/拆分的内置行（数据源：0.2.0-rc.2 dsh-base / dsh-web-app 捆绑补丁 + 各包 package.json description）=====
+  ["@deepseek-ai/dsh-hmr"]: { name: "热加载驱动（0.2.0+）", desc: "协调模块与 profile 配置的热重载（0.2.0 起替代 cordis-plugin-hmr，监听全局与 profile 补丁文件）", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-settings"]: { name: "设置服务", desc: "用户设置缝（ctx.settings）：设置文档读取与命名空间作用域", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-config-editor"]: { name: "配置编辑器", desc: "把插件配置持久化进 profile 补丁并经加载器对账热生效", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-authorization"]: { name: "授权缝", desc: "插件自有凭据获取流程（ctx.authorization）：与用户对话取得凭据", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-otel"]: { name: "OTLP 遥测通道", desc: "普通事件与会话日志的 OTLP 上报（可关闭）", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-plugin-package-inventory-deepseek"]: { name: "插件清单投影", desc: "把加载器中的插件包清单投喂给官方 DeepSeek 模型请求", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-plugin-manager"]: { name: "官方插件管理服务", desc: "dsh CLI/Web/agent 工具共享的 profile 插件与捆绑管理（0.2.0+）；与本插件的行同 id 时由本插件替换", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-deepseek-account-platform"]: { name: "DeepSeek 账号授权", desc: "通过浏览器 PKCE 流程授权 DeepSeek 账号", category: "llm" as PluginCategory },
+  ["@deepseek-ai/dsh-deepseek-llm-api-extensions"]: { name: "DeepSeek 请求扩展注册", desc: "官方 DeepSeek 模型适配的增量请求字段注册表", category: "llm" as PluginCategory },
+  ["@deepseek-ai/dsh-llm-deepseek-api-key"]: { name: "DeepSeek API Key 适配", desc: "DeepSeek api-key 提供者的认证与模型发现", category: "llm" as PluginCategory },
+  ["@deepseek-ai/dsh-llm-deepseek-account"]: { name: "DeepSeek 账号适配", desc: "DeepSeek 账号提供者的认证与模型发现", category: "llm" as PluginCategory },
+  ["@deepseek-ai/dsh-session-log-deepseek"]: { name: "会话日志请求扩展", desc: "官方 DeepSeek 适配的会话日志增量无损请求扩展", category: "session" as PluginCategory },
+  ["@deepseek-ai/dsh-compaction-image-offload"]: { name: "图片溢写压缩", desc: "图片预算超限时把最旧图片替换为占位符并重试", category: "session" as PluginCategory },
+  ["@deepseek-ai/dsh-ptc-runtime-node"]: { name: "PTC 执行运行时", desc: "沙箱化 Node 进程实现的 PTC 执行能力", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-workflow-ptc"]: { name: "PTC 工作流", desc: "在共享 PTC 沙箱运行时中编排工作流脚本", category: "agent" as PluginCategory },
+  ["@deepseek-ai/dsh-web-fetch-http"]: { name: "HTTP 抓取提供者", desc: "ctx.web 的匿名公网 HTTP(S) 抓取提供者", category: "web" as PluginCategory },
+  ["@deepseek-ai/dsh-mcp-resources"]: { name: "MCP 资源", desc: "经共享模型工具做作用域内的 MCP 资源发现与读取", category: "tool" as PluginCategory },
+  ["@deepseek-ai/dsh-client-resources"]: { name: "客户端资源模型", desc: "URL 地址经协议注册的提供者变为可用值（useResource 钩子）", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-client-shortcuts"]: { name: "快捷键注册", desc: "应用键盘命令注册与物理键路由", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-file-upload"]: { name: "文件上传", desc: "Agent 作用域的浏览器文件上传、流入与暂存服务", category: "core" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-renderer"]: { name: "界面渲染器", desc: "React 槽位绑定、ctx.uiRenderer 与组装后的应用根（0.2.0 起接管客户端运行时职责）", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-session"]: { name: "会话控制器适配", desc: "会话控制器的 React 适配与会话作用域槽位", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-chat"]: { name: "会话目标界面", desc: "Chat Conversation 目标、节点定义、渲染器与详情面板", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-approval"]: { name: "审批卡片", desc: "经作用域远程事件接管审批编排的对话卡片", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-shortcuts"]: { name: "快捷键面板", desc: "快捷键参考、录制与本地偏好编辑", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-settings-account"]: { name: "账号设置", desc: "管理 DeepSeek 登录与开放平台账单页入口", category: "ui" as PluginCategory },
+  ["@deepseek-ai/dsh-client-ui-plugin-manager"]: { name: "官方插件面板", desc: "官方侧边栏插件面板：安装/启停/重试/组合插件包（0.2.0+，与本插件的设置页标签互不冲突）", category: "ui" as PluginCategory },
 }
 
 /** 系统保护模块：缺失会导致应用/传输层/插件管家自身失效，界面不允许停用。 */
@@ -212,6 +240,7 @@ export const SYSTEM_MODULES: ReadonlySet<string> = new Set([
   // 基础运行时与热加载
   '@deepseek-ai/cordis-plugin-timer',
   '@deepseek-ai/cordis-plugin-hmr',
+  '@deepseek-ai/dsh-hmr',
   // 类型反射与 RPC
   '@deepseek-ai/dsh-typert-registry',
   '@deepseek-ai/dsh-typert-loader',
@@ -226,6 +255,7 @@ export const SYSTEM_MODULES: ReadonlySet<string> = new Set([
   '@deepseek-ai/dsh-session',
   '@deepseek-ai/dsh-session-persistence-jsonl',
   // 设置与凭据存储
+  '@deepseek-ai/dsh-settings',
   '@deepseek-ai/dsh-settings-file',
   '@deepseek-ai/dsh-storage',
   '@deepseek-ai/dsh-storage-json',

@@ -39,11 +39,15 @@ try {
   console.log('setEnabled via gateway =>', JSON.stringify(toggle))
   assert.strictEqual(toggle.reason, 'not-found')
 
-  // 编解码检查：把网关返回值喂给客户端 strict schema
+  // 编解码检查：把网关返回值喂给客户端 strict schema。
+  // 双形态断言：0.1.x 宿主读 result.schema（真 zod 实例），0.2.0 宿主读 result.create() 工厂。
   const { TYPERT_REMOTE } = await import('../lib/types/client/remote.js')
   const listDescriptor = TYPERT_REMOTE.descriptors.find(d => d.method === 'list')
-  const parsed = listDescriptor.result.schema.parse(result)
-  console.log('client schema parsed host result OK, entries =', parsed.entries.length)
+  assert.ok(listDescriptor.result.schema && typeof listDescriptor.result.schema.parse === 'function', '0.1.x form: result.schema is a zod instance')
+  assert.ok('_zod' in listDescriptor.result.schema, '0.1.x form: result.schema carries _zod')
+  assert.ok(typeof listDescriptor.result.create === 'function', '0.2.0 form: result.create is a factory')
+  const parsed = listDescriptor.result.create().parse(result)
+  console.log('client schema parsed host result OK (dual-form), entries =', parsed.entries.length)
 
   await ctx.fiber.dispose()
   console.log('GATEWAY PATH E2E: ALL PASS')

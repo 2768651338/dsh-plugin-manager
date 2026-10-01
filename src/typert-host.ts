@@ -6,6 +6,9 @@
  * Remote 装饰器标记写进本插件的协议实例，网关（另一实例）看不见，SRC 端点声明失败（404）。
  * 通过 exports["./typert"] 交给 typert-loader 注册为严格定义后，端点走注册表声明，
  * 完全绕开装饰器标记与模块实例身份问题。
+ *
+ * codec 形态：0.1.x 宿主要求 zod 实例（`schema` 字段），0.2.0 起要求 `create()` 工厂；
+ * strictCodec() 产出同时携带两种形态的对象，兼容两代宿主（见函数注释）。
  * @module dsh-plugin-manager/typert-host
  */
 
@@ -95,6 +98,21 @@ const backupImportResult$schema = z.object({
 
 const PACKAGE = '@2768651338/dsh-plugin-manager'
 
+/**
+ * 双形态 strict codec：0.1.x 的 typert-loader/registry 读 `schema` 字段（要求真 zod v4
+ * 实例：`"_zod" in schema` 且 `schema.parse` 可调用），0.2.0 起改读 `create()` 工厂
+ * （注册时只校验函数存在，调用时惰性物化）。两代校验各读各的字段、忽略多余字段，
+ * 因此同一对象同时携带两种形态，即可同时通过 0.1.x 与 0.2.0 宿主的注册校验。
+ */
+function strictCodec(typeSymbol: string, schema: z.ZodType) {
+  return {
+    mode: 'strict' as const,
+    typeSymbol,
+    schema,
+    create: () => schema,
+  }
+}
+
 /** 主机面工件：typert-loader 自动注册（entry 的 package.json exports["./typert"]）。 */
 export const TYPERT = {
   package: PACKAGE,
@@ -108,11 +126,7 @@ export const TYPERT = {
       method: 'list',
       invocation: { kind: 'direct' },
       parameters: [],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#PluginManagerSnapshot',
-        schema: snapshot$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#PluginManagerSnapshot', snapshot$schema),
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 1, column: 1 },
     },
     {
@@ -126,20 +140,16 @@ export const TYPERT = {
           name: 'entryId',
           wire: 'entryId',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: brandedString },
+          codec: strictCodec('string', brandedString),
         },
         {
           name: 'enabled',
           wire: 'enabled',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'boolean', schema: z.boolean() },
+          codec: strictCodec('boolean', z.boolean()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#SetEnabledResult',
-        schema: setEnabledResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#SetEnabledResult', setEnabledResult$schema),
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 2, column: 1 },
     },
     {
@@ -153,26 +163,22 @@ export const TYPERT = {
           name: 'moduleName',
           wire: 'moduleName',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
         {
           name: 'name',
           wire: 'name',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
         {
           name: 'desc',
           wire: 'desc',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#CatalogEditResult',
-        schema: catalogEditResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#CatalogEditResult', catalogEditResult$schema),
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 3, column: 1 },
     },
     {
@@ -186,14 +192,10 @@ export const TYPERT = {
           name: 'moduleName',
           wire: 'moduleName',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#CatalogEditResult',
-        schema: catalogEditResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#CatalogEditResult', catalogEditResult$schema),
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 4, column: 1 },
     },
     {
@@ -203,11 +205,7 @@ export const TYPERT = {
       method: 'exportBackup',
       invocation: { kind: 'direct' },
       parameters: [],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#BackupExportResult',
-        schema: backupExportResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#BackupExportResult', backupExportResult$schema),
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 5, column: 1 },
     },
     {
@@ -221,14 +219,10 @@ export const TYPERT = {
           name: 'json',
           wire: 'json',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#BackupImportResult',
-        schema: backupImportResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#BackupImportResult', backupImportResult$schema),
       sourceLocation: { file: 'packages/external/dsh-plugin-manager/src/index.ts', line: 6, column: 1 },
     },
   ],

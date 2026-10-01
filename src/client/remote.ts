@@ -2,7 +2,8 @@
  * 手写 Typert 远程工件（对齐 @deepseek-ai/dsh-typert-generator 的输出形态）：
  * 主机侧 PluginManagerGateway 用 SRC 标记（Remote 装饰器 + TypertRemoteService），
  * 浏览器侧靠这份贡献把 pluginManager 命名空间挂到 ctx.remote 上。
- * 参数/结果必须携带 strict zod codec（客户端 $mount 强制要求）。
+ * 参数/结果必须携带 strict codec（客户端 $mount 强制要求）；codec 为双形态对象
+ * （`schema` 兼容 0.1.x 宿主，`create()` 兼容 0.2.0+ 宿主），见 strictCodec 注释。
  * @module dsh-plugin-manager/remote
  */
 
@@ -94,6 +95,20 @@ const backupImportResult$schema = z.object({
 
 const PACKAGE = '@2768651338/dsh-plugin-manager'
 
+/**
+ * 双形态 strict codec：0.1.x 宿主链路读 `schema` 字段（真 zod v4 实例），0.2.0 起的
+ * typert-loader/registry 改读 `create()` 工厂。两代校验各读各的字段、忽略多余字段，
+ * 同一对象携带两种形态即可同时通过两代宿主校验（与 typert-host.ts 的 strictCodec 镜像）。
+ */
+function strictCodec(typeSymbol: string, schema: z.ZodType) {
+  return {
+    mode: 'strict' as const,
+    typeSymbol,
+    schema,
+    create: () => schema,
+  }
+}
+
 /** 浏览器侧挂载贡献：客户端 apply 里 ctx.remote.$mount(TYPERT_REMOTE)。 */
 export const TYPERT_REMOTE = {
   package: PACKAGE,
@@ -105,11 +120,7 @@ export const TYPERT_REMOTE = {
       method: 'list',
       invocation: { kind: 'direct' },
       parameters: [],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#PluginManagerSnapshot',
-        schema: snapshot$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#PluginManagerSnapshot', snapshot$schema),
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 1, 'column': 1 },
     },
     {
@@ -123,20 +134,16 @@ export const TYPERT_REMOTE = {
           name: 'entryId',
           wire: 'entryId',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: brandedString },
+          codec: strictCodec('string', brandedString),
         },
         {
           name: 'enabled',
           wire: 'enabled',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'boolean', schema: z.boolean() },
+          codec: strictCodec('boolean', z.boolean()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#SetEnabledResult',
-        schema: setEnabledResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#SetEnabledResult', setEnabledResult$schema),
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 2, 'column': 1 },
     },
     {
@@ -150,26 +157,22 @@ export const TYPERT_REMOTE = {
           name: 'moduleName',
           wire: 'moduleName',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
         {
           name: 'name',
           wire: 'name',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
         {
           name: 'desc',
           wire: 'desc',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#CatalogEditResult',
-        schema: catalogEditResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#CatalogEditResult', catalogEditResult$schema),
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 3, 'column': 1 },
     },
     {
@@ -183,14 +186,10 @@ export const TYPERT_REMOTE = {
           name: 'moduleName',
           wire: 'moduleName',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#CatalogEditResult',
-        schema: catalogEditResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#CatalogEditResult', catalogEditResult$schema),
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 4, 'column': 1 },
     },
     {
@@ -200,11 +199,7 @@ export const TYPERT_REMOTE = {
       method: 'exportBackup',
       invocation: { kind: 'direct' },
       parameters: [],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#BackupExportResult',
-        schema: backupExportResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#BackupExportResult', backupExportResult$schema),
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 5, 'column': 1 },
     },
     {
@@ -218,14 +213,10 @@ export const TYPERT_REMOTE = {
           name: 'json',
           wire: 'json',
           source: 'json',
-          codec: { mode: 'strict', typeSymbol: 'string', schema: z.string() },
+          codec: strictCodec('string', z.string()),
         },
       ],
-      result: {
-        mode: 'strict',
-        typeSymbol: '@2768651338/dsh-plugin-manager/types#BackupImportResult',
-        schema: backupImportResult$schema,
-      },
+      result: strictCodec('@2768651338/dsh-plugin-manager/types#BackupImportResult', backupImportResult$schema),
       sourceLocation: { 'file': 'packages/external/dsh-plugin-manager/src/index.ts', 'line': 6, 'column': 1 },
     },
   ],
