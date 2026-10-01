@@ -4,17 +4,16 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import assert from 'node:assert'
 import { boot } from '@deepseek-ai/dsh-app-boot'
 
 const tempHome = mkdtempSync(join(tmpdir(), 'dsh-pm-claims-'))
 process.env.DSH_HOME = tempHome
-const base = 'D:/Program Files (x86)/DeepSeek Harness/resources/harness/'
-const typertUrl = pathToFileURL(base + 'node_modules/@deepseek-ai/dsh-typert-registry/lib/index.js').href
-const typertLoaderUrl = pathToFileURL(base + 'node_modules/@deepseek-ai/dsh-typert-loader/lib/index.js').href
-const gatewayUrl = pathToFileURL(base + 'node_modules/@deepseek-ai/dsh-api-gateway/lib/index.js').href
-const profileModules = pathToFileURL('C:/Users/Administrator/.dsh/profiles/web/node_modules/').href
+const selfUrl = (specifier) => import.meta.resolve(specifier)
+const typertUrl = selfUrl('@deepseek-ai/dsh-typert-registry')
+const typertLoaderUrl = selfUrl('@deepseek-ai/dsh-typert-loader')
+const gatewayUrl = selfUrl('@deepseek-ai/dsh-api-gateway')
+const pluginUrl = selfUrl('@2768651338/dsh-plugin-manager')
 const configPath = join(tempHome, 'cordis.yml')
 writeFileSync(configPath, [
   '- id: typert',
@@ -24,7 +23,7 @@ writeFileSync(configPath, [
   '- id: api-gateway',
   "  name: '" + gatewayUrl + "'",
   '- id: plugin-manager',
-  "  name: '@2768651338/dsh-plugin-manager'",
+  "  name: '" + pluginUrl + "'",
   '',
 ].join('\n'))
 
@@ -39,7 +38,7 @@ try {
         },
       },
     })
-  }, profileModules)
+  })
 
   assert.strictEqual(claims.length, 1, 'gateway registered one rpc intercept')
   const { claim, handler } = claims[0]

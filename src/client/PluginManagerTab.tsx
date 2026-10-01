@@ -20,7 +20,7 @@ export interface PluginManagerTabInjected {
 /** 设置槽位渲染器组装的完整 props。 */
 export type PluginManagerTabProps =
   PropsRuntime<'settings.plugins.tab'>
-  & PropsLocale<'settings.pluginManager'>
+  & PropsLocale<'settings.dshPluginManager'>
   & InjectFace<PluginManagerTabInjected>
 
 type ViewState =
@@ -543,6 +543,6 @@ export function PluginManagerTab({ list, setEnabled, setOverride, removeOverride
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** 插件管家标签页文案。 */
-    'settings.pluginManager': PluginManagerLocaleKey
+    'settings.dshPluginManager': PluginManagerLocaleKey
   }
 }

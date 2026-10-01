@@ -8,8 +8,9 @@
  * @module dsh-plugin-manager/client
  */
 
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { RemoteResult, TypertRemoteNamespaceMap } from '@deepseek-ai/dsh-typert-protocol'
@@ -20,8 +21,8 @@ import { TYPERT_REMOTE } from './remote.ts'
 
 export type { PluginManagerTabInjected, PluginManagerTabProps } from './PluginManagerTab.tsx'
 
-/** 本插件拥有的文案命名空间。 */
-export const NS = 'settings.pluginManager'
+/** 本插件拥有的文案命名空间（带插件前缀，避免与其他作者的管理器插件撞车）。 */
+export const NS = 'settings.dshPluginManager'
 
 /** 所需服务（cordis 注入）。 */
 export const inject = ['slots', 'locale', 'remote']
