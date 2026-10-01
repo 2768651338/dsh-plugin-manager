@@ -9,3 +9,7 @@ lib/types/
 Thumbs.db
 
 package-lock.json
+/.mimosa/
+
+# Mimosa 安全扫描产物（任意层级）
+**/.mimosa/
