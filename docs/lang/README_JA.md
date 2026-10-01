@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.7.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -27,6 +27,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.7.0** — **DSH 0.2.0** に対応（`0.2.0-rc.2` で検証）しつつ 0.1.x ホストも引き続き動作：デュアルフォームの codec アーティファクトが 0.1.x（zod インスタンス）と 0.2.0（`create()` ファクトリ）の両 typert チェーンに登録され、e2e スイート全件が 0.2.0-rc.2 と 0.1.5-rc.3 の両方で通過。カタログには 0.2.0 の行（`dsh-hmr`、DeepSeek LLM の分割、公式プラグインマネージャーの行）を追加し、peer 範囲を `0.2.0-rc.0`+ に拡大。ホットリロードも 0.2.0 で引き続き機能します（`dsh-hmr` サービスがグローバルパッチファイルを監視）。
+>
 > 🆕 **2026-10-01 · v0.6.0** — **DSH 0.1.5** に対応（`0.1.5-rc.3` パッケージセットで検証）：ホスト/クライアント両面が 0.1.5-rc.3 でビルドされ、e2e スイート全件が通過。テストスイートは自己完結型になり、ローカルの DSH インストールは不要です。`@linxin666/dsh-web-ui-all` とのロケール名前空間の衝突も修正。
 >
 > 🆕 **2026-08-14 · v0.3.0** — UI 内でのメモ編集が登場。カードの **メモを編集** をクリックすれば、プラグインの名前変更や説明の書き換えを `catalog.json` を触らずに行えます。
@@ -66,7 +68,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 
 | 機能 | 説明 |
 |------|------|
-| 📚 中国語カタログ | 130 以上の内蔵エントリ（名前 / 説明 / カテゴリ）。フォールバックとプラグインごとのカスタマイズ付き |
+| 📚 中国語カタログ | 190 以上の内蔵エントリ（名前 / 説明 / カテゴリ）。フォールバックとプラグインごとのカスタマイズ付き |
 | 🔘 ワンクリック切り替え | `~/.dsh/cordis.patch.yml`（グローバル層）に書き込み、DSH の HMR ウォッチャーが約 1 秒で再適用。有効化時は下位層を上書きする明示的な `disabled: false` を書き込む |
 | ✏️ UI 内メモ編集 | 各カードの「メモを編集」で中国語名/説明を編集（`~/.dsh/plugin-manager/catalog.json` に保存）。ワンクリックでデフォルトに復元 |
 | 🛡️ 安全ガード | ブートストラップ/トランスポート/設定シェルの行は「システム」としてロック。`!!js` 式の行は「式で制御」と表示 |
@@ -122,7 +124,7 @@ node tests/host-gateway.e2e.mjs   # ホストゲートウェイのエンドツ�
 node tests/claims.e2e.mjs         # 通常 node と tsx ソース起動でのエンドポイント主張
 ```
 
-> テストが起動対象とする DSH ホストパッケージ（dsh-app-boot、dsh-typert-\*、dsh-api-gateway など）は devDependencies で DSH `0.1.5-rc.3` 版に固定され、エントリパスはすべて `import.meta.resolve` で解決されます。ビルド・テスト・型チェックにローカルの DSH インストールは不要です。
+> テストが起動対象とする DSH ホストパッケージ（dsh-app-boot、dsh-typert-\*、dsh-api-gateway など）は devDependencies で DSH `0.2.0-rc.2` 版に固定され、エントリパスはすべて `import.meta.resolve` で解決されます。ビルド・テスト・型チェックにローカルの DSH インストールは不要です。デュアルフォーム codec アーティファクトの回帰検証：固定を一時的に `0.1.5-rc.3` に戻してスイート全件を再実行し、両世代のホストが必ず同時に通過することを確認します。
 
 ## 注意事項
 

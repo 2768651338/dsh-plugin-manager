@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.7.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -27,6 +27,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.7.0** — An **DSH 0.2.0** angepasst (verifiziert gegen `0.2.0-rc.2`), während 0.1.x-Hosts weiter funktionieren: Die Codec-Artefakte in Doppelform registrieren sich sowohl in der 0.1.x-typert-Kette (zod-Instanz) als auch in der 0.2.0-Kette (`create()`-Fabrik) — die gesamte e2e-Suite besteht auf beiden, 0.2.0-rc.2 und 0.1.5-rc.3. Der Katalog erhielt die 0.2.0-Zeilen (`dsh-hmr`, die DeepSeek-LLM-Aufteilung, die Zeilen des offiziellen Plugin-Managers); die Peer-Bereiche wurden auf `0.2.0-rc.0`+ erweitert. Hot-Reload funktioniert weiterhin unter 0.2.0 (der `dsh-hmr`-Dienst überwacht die globale Patch-Datei).
+>
 > 🆕 **2026-10-01 · v0.6.0** — An **DSH 0.1.5** angepasst (verifiziert gegen das `0.1.5-rc.3`-Paketset): Host- und Client-Hälfte bauen und bestehen die gesamte e2e-Suite gegen 0.1.5-rc.3, und die Testsuite läuft jetzt autark (keine lokale DSH-Installation nötig). Behebt auch eine Locale-Namespace-Kollision mit `@linxin666/dsh-web-ui-all`.
 >
 > 🆕 **2026-08-14 · v0.3.0** — Notizbearbeitung in der Oberfläche ist da: Klicke auf **Notizen bearbeiten** an einer beliebigen Karte, um einen Plugin umzubenennen oder seine Beschreibung zu ändern — ohne `catalog.json` anzufassen.
@@ -66,7 +68,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 
 | Funktion | Beschreibung |
 |----------|--------------|
-| 📚 Chinesischer Katalog | 130+ eingebaute Einträge (Name / Beschreibung / Kategorie) mit Fallback und Anpassung je Plugin |
+| 📚 Chinesischer Katalog | 190+ eingebaute Einträge (Name / Beschreibung / Kategorie) mit Fallback und Anpassung je Plugin |
 | 🔘 Ein-Klick-Schalter | Schreibt `~/.dsh/cordis.patch.yml` (globale Ebene); der HMR-Watcher von DSH wendet es in ~1 Sekunde neu an; Aktivieren schreibt ein explizites `disabled: false`, das untere Ebenen überschreibt |
 | ✏️ Notizen in der UI | „Notizen bearbeiten“ an jeder Karte ändert den chinesischen Namen/die Beschreibung (`~/.dsh/plugin-manager/catalog.json`) mit Ein-Klick-Wiederherstellung |
 | 🛡️ Sicherungen | Bootstrap-/Transport-/Einstellungs-Shell-Zeilen als „System“ gesperrt; `!!js`-Ausdruckszeilen als „Ausdrucksgesteuert“ markiert |

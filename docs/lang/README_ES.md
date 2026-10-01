@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.7.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -27,6 +27,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.7.0** — Adaptado a **DSH 0.2.0** (verificado contra `0.2.0-rc.2`) manteniendo el funcionamiento en hosts 0.1.x: los artefactos codec de doble forma se registran tanto en la cadena typert de 0.1.x (instancia zod) como en la de 0.2.0 (fábrica `create()`) — toda la suite e2e pasa tanto en 0.2.0-rc.2 como en 0.1.5-rc.3. El catálogo incorpora las filas de 0.2.0 (`dsh-hmr`, la división del LLM de DeepSeek, las filas del plugin manager oficial); los rangos de peer se amplían a `0.2.0-rc.0`+. La recarga en caliente sigue funcionando en 0.2.0 (el servicio `dsh-hmr` vigila el archivo de parches global).
+>
 > 🆕 **2026-10-01 · v0.6.0** — Adaptado a **DSH 0.1.5** (verificado contra el conjunto de paquetes `0.1.5-rc.3`): la mitad host y la client compilan y pasan toda la suite e2e en 0.1.5-rc.3, y la suite de pruebas ahora es autocontenida (sin instalación local de DSH). También corrige una colisión de espacio de nombres de localización con `@linxin666/dsh-web-ui-all`.
 >
 > 🆕 **2026-08-14 · v0.3.0** — La edición de notas en la interfaz ya está disponible: haz clic en **Editar notas** en cualquier tarjeta para renombrar un plugin o reescribir su descripción sin tocar `catalog.json`.
@@ -66,7 +68,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 
 | Función | Descripción |
 |---------|-------------|
-| 📚 Catálogo en chino | Más de 130 entradas integradas (nombre / descripción / categoría), con respaldo y personalización por plugin |
+| 📚 Catálogo en chino | Más de 190 entradas integradas (nombre / descripción / categoría), con respaldo y personalización por plugin |
 | 🔘 Interruptor de un clic | Escribe `~/.dsh/cordis.patch.yml` (capa global); el watcher HMR de DSH lo re-aplica en ~1 segundo; al activar escribe un `disabled: false` explícito que anula capas inferiores |
 | ✏️ Notas en la interfaz | "Editar notas" en cada tarjeta edita el nombre/descripción en chino (`~/.dsh/plugin-manager/catalog.json`) con restauración de valores por defecto en un clic |
 | 🛡️ Protecciones | Filas de arranque/transporte/entorno de ajustes bloqueadas como "Sistema"; filas con expresiones `!!js` etiquetadas como "Controlado por expresión" |

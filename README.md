@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.7.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 [![topic: dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-7B68EE.svg)](https://github.com/topics/dsh-plugin)
@@ -29,6 +29,14 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.7.0** — Adapted to **DSH 0.2.0** (`0.2.0-rc.2`) with a
+> **dual-form codec artifact** that registers on both the 0.1.x and the 0.2.0
+> typert chains (0.2.0 switched from zod instances to `create()` factories) —
+> the full e2e suite passes against **both** `0.2.0-rc.2` and `0.1.5-rc.3`.
+> Catalog gained the 0.2.0 rows (`dsh-hmr`, the DeepSeek LLM split, the official
+> plugin manager rows); peer ranges widened to cover `0.2.0-rc.0`+. Hot-reload
+> still works on 0.2.0 (the `dsh-hmr` service watches the global patch file).
+>
 > 🆕 **2026-10-01 · v0.6.0** — Adapted to **DSH 0.1.5** (`0.1.5-rc.3`): the host
 > and client halves build and pass the full e2e suite against the 0.1.5-rc.3
 > package set, and the test suite now runs hermetically (no local DSH install
@@ -59,12 +67,14 @@
 
 | Item | Value |
 |------|-------|
-| DSH version | **0.1.5** line (verified against the `0.1.5-rc.3` package set; 0.1.0-rc.5/6 remains compatible) |
-| Verified on | **2026-10-01**, web profile, Windows — host chain + strict typert registration covered by the e2e suite |
+| DSH version | **0.2.0** line (verified against the `0.2.0-rc.2` package set) and **0.1.x** (dual-form codecs re-verified against `0.1.5-rc.3`) |
+| Verified on | **2026-10-01**, web profile, Windows — host chain + strict typert registration covered by the e2e suite on both 0.2.0-rc.2 and 0.1.5-rc.3 |
 | Install mechanism | `dsh plugin --profile web add` (bundle patch + dual-face row) |
 | Depends on | typert-loader / api-gateway / client-modules rows shipped in `dsh-base` + `dsh-web-app` |
 
 > The official launcher boots via tsx from source; this plugin's strict `./typert` registration is specifically designed to work under both plain-node and tsx source launch (covered by `tests/claims.e2e.mjs`). If you run a different DSH version, re-run the test suite before reporting issues.
+>
+> **DSH 0.2.0 note:** the `dsh-base` bundle now ships an official plugin manager (`@deepseek-ai/dsh-plugin-manager`, row id `plugin-manager`). This plugin's bundle patch inserts the same row id, and the later bundle layer wins — so installing this plugin replaces the official host row. The official *sidebar* panel (`@deepseek-ai/dsh-client-ui-plugin-manager`) is a separate surface and may coexist with this plugin's Settings tab.
 
 ## Install / Uninstall
 
@@ -127,7 +137,7 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 
 | Feature | Description |
 |---------|-------------|
-| 📚 Chinese catalog | 130+ built-in entries (name / description / category), fallback + per-plugin customization |
+| 📚 Chinese catalog | 190+ built-in entries (name / description / category), fallback + per-plugin customization |
 | 🔘 One-click toggle | Writes `~/.dsh/cordis.patch.yml` (global layer); DSH's HMR watcher re-applies within ~1 second; enabling writes an explicit `disabled: false` that overrides lower layers |
 | ✏️ In-UI notes | "Edit notes" on each card edits the Chinese name/description (`~/.dsh/plugin-manager/catalog.json`), with one-click restore-to-default |
 | 🛡️ Safety guards | Bootstrap/transport/settings-shell rows locked as "System"; `!!js`-expression rows labeled "Expression-controlled" |
@@ -165,7 +175,7 @@ Precedence: override file > built-in catalog > English short name.
 | Error mentions **404** or `invocation-unavailable` | Your installed version is older than 0.2.0 (missing `./typert` strict registration) — update and restart |
 | `cannot get property "remote.pluginManager" without inject` | Version older than 0.2.2 — update and refresh |
 | A toggle doesn't seem to work | Check `~/.dsh/cordis.patch.yml` keeps row-block structure (a `- ` dash at column 0); rows labeled "表达式控制" are `!!js`-controlled — edit the config file directly |
-| pnpm warns `peer range @deepseek-ai/*@* does not match resolved 0.1.5-rc.3` | Harmless — DSH ships these as prereleases and semver `*` doesn't match them. v0.6.0+ declares `>=0.1.0-rc.0 \|\| >=0.1.5-rc.0`; for other plugins add `peerDependencyRules.allowAny: ['@deepseek-ai/*']` to `pnpm-workspace.yaml` |
+| pnpm warns `peer range @deepseek-ai/*@* does not match resolved 0.2.0-rc.2` | Harmless — DSH ships these as prereleases and semver `*` doesn't match them. v0.7.0+ declares `>=0.1.0-rc.0 \|\| >=0.1.5-rc.0 \|\| >=0.2.0-rc.0`; for other plugins add `peerDependencyRules.allowAny: ['@deepseek-ai/*']` to `pnpm-workspace.yaml` |
 | Where are the logs? | DSH host startup log (launcher console) for host errors; browser DevTools (F12) console for client errors |
 | Rollback | Remove the plugin's rows from `cordis.patch.yml`, use **恢复默认** for notes, or uninstall with the `remove` command above |
 
@@ -199,9 +209,11 @@ node tests/claims.e2e.mjs       # endpoint claims under plain-node and tsx sourc
 ```
 
 > The DSH host packages the tests boot against (`dsh-app-boot`, `dsh-typert-*`,
-> `dsh-api-gateway`, …) are pinned devDependencies at the DSH `0.1.5-rc.3`
+> `dsh-api-gateway`, …) are pinned devDependencies at the DSH `0.2.0-rc.2`
 > versions, and every entry path is resolved via `import.meta.resolve` — no
-> local DSH installation is needed to build, test, or typecheck.
+> local DSH installation is needed to build, test, or typecheck. The dual-form
+> codec artifacts are regression-verified by temporarily flipping the pins back
+> to `0.1.5-rc.3` and re-running the full suite (both generations must pass).
 
 **Contributing.** Fork → change → `pnpm build` → run the tests above → open a PR against `main`. Small fixes (docs, catalog entries, translations) are welcome without prior discussion. Report issues with the DSH version and the exact error detail shown in the tab.
 
