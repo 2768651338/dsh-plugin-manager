@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 [![topic: dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-7B68EE.svg)](https://github.com/topics/dsh-plugin)
@@ -28,6 +28,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.6.0** — 适配 **DSH 0.1.5**（以 `0.1.5-rc.3` 包集验证）：主机/浏览器两半在 0.1.5-rc.3 上构建并通过全部端到端测试，测试套件改为自包含（不再依赖本机 DSH 安装）。同时修复与 `@linxin666/dsh-web-ui-all` 的文案命名空间冲突。
+>
 > 🆕 **2026-08-14 · v0.3.0** — 界面内备注编辑上线：点卡片上的「编辑备注」就能改名、改写说明，不用再碰 catalog.json 配置文件。
 >
 > 🏷️ **v0.4.0** — 包名改用自有命名空间：@2768651338/dsh-plugin-manager（原 @dsh-external/* 无维护权限，已按要求更换）。
@@ -53,8 +55,8 @@
 
 | 项目 | 说明 |
 |------|------|
-| DSH 版本 | **0.1.0-rc.5**（官方安装包，resources/harness 内置源码树） |
-| 验证时间 | **2026-08-14**，web profile，Windows |
+| DSH 版本 | **0.1.5** 线（以 `0.1.5-rc.3` 包集验证；0.1.0-rc.5/6 仍兼容） |
+| 验证时间 | **2026-10-01**，web profile，Windows——主机链路与 ./typert 严格注册由端到端测试覆盖 |
 | 安装机制 | `dsh plugin --profile web add`（bundle 补丁 + 双面行） |
 | 依赖的内置行 | dsh-base + dsh-web-app 自带的 typert-loader / api-gateway / client-modules |
 
@@ -159,7 +161,7 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 | 错误含 **404** 或 `invocation-unavailable` | 安装版本低于 0.2.0（缺少 ./typert 严格注册）——更新并重启 |
 | `cannot get property "remote.pluginManager" without inject` | 版本低于 0.2.2 —— 更新后刷新页面 |
 | 开关点了没反应 | 检查 `~/.dsh/cordis.patch.yml` 是否保持行块结构（列 0 的 - 开头）；标注「表达式控制」的行由 !!js 表达式决定，需直接改配置文件 |
-| pnpm 报 `peer range @deepseek-ai/*@* does not match resolved 0.1.0-rc.6` | 无害——DSH 以 prerelease `0.1.0-rc.6` 发布这些包，semver `*` 不匹配 prerelease。v0.4.1+ 已声明 `>=0.1.0-rc.0`；其它插件可在 `pnpm-workspace.yaml` 加 `peerDependencyRules.allowAny: ['@deepseek-ai/*']` |
+| pnpm 报 `peer range @deepseek-ai/*@* does not match resolved 0.1.5-rc.3` | 无害——DSH 以 prerelease 发布这些包，semver `*` 不匹配 prerelease。v0.6.0+ 已声明 `>=0.1.0-rc.0 \|\| >=0.1.5-rc.0`；其它插件可在 `pnpm-workspace.yaml` 加 `peerDependencyRules.allowAny: ['@deepseek-ai/*']` |
 | 日志在哪里 | 主机错误看 DSH 启动日志（启动器控制台）；客户端错误看浏览器 F12 控制台 |
 | 回滚 | 删除补丁文件中插件管家写入的行块；备注点「恢复默认」；或按上面的 remove 命令卸载 |
 
@@ -186,12 +188,15 @@ tests/                 冒烟/端到端测试
 
 ```bash
 pnpm build                      # tsc + tsdown
+pnpm test                       # 补丁/备份冒烟 + 端点声明/网关/主机端到端
 node tests/patch-file.smoke.mjs # 补丁编辑器 9 项冒烟测试
 node tests/host-gateway.e2e.mjs # 主机网关端到端（含覆盖文件落盘校验）
 node tests/claims.e2e.mjs       # 端点声明验证（普通与 tsx 源码启动模式均适用）
 ```
 
-> 测试脚本内的绝对路径指向本机 DSH 安装目录（仅开发环境使用，不影响运行时行为）。
+> 测试所用的 DSH 主机包（dsh-app-boot、dsh-typert-*、dsh-api-gateway 等）已在
+> devDependencies 固定为 DSH `0.1.5-rc.3` 版本，所有入口路径通过
+> `import.meta.resolve` 解析——构建、测试、类型检查都不再依赖本机 DSH 安装。
 
 **贡献**：Fork → 修改 → `pnpm build` → 跑上面的测试 → 向 main 分支提 PR。文档、目录条目、翻译等小型修复无需提前沟通。报 issue 时请附 DSH 版本和标签页里显示的完整错误详情。
 

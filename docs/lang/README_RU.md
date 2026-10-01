@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -27,6 +27,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.6.0** — Адаптация к **DSH 0.1.5** (проверено на наборе пакетов `0.1.5-rc.3`): хостовая и клиентская половины собираются и проходят весь e2e-набор на 0.1.5-rc.3, а тесты стали самодостаточными (локальная установка DSH не нужна). Также исправлена коллизия namespace локализации с `@linxin666/dsh-web-ui-all`.
+>
 > 🆕 **2026-08-14 · v0.3.0** — Доступно редактирование заметок в интерфейсе: нажмите **Редактировать заметки** на любой карточке, чтобы переименовать плагин или переписать его описание, не трогая `catalog.json`.
 >
 > 🔧 **v0.2.x** — Исправлены 404 эндпоинтов при tsx-запуске из исходников (строгая регистрация `./typert`) и доступ к инъекции cordis (канал `ctx.get`).

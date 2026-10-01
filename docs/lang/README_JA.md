@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -27,6 +27,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.6.0** — **DSH 0.1.5** に対応（`0.1.5-rc.3` パッケージセットで検証）：ホスト/クライアント両面が 0.1.5-rc.3 でビルドされ、e2e スイート全件が通過。テストスイートは自己完結型になり、ローカルの DSH インストールは不要です。`@linxin666/dsh-web-ui-all` とのロケール名前空間の衝突も修正。
+>
 > 🆕 **2026-08-14 · v0.3.0** — UI 内でのメモ編集が登場。カードの **メモを編集** をクリックすれば、プラグインの名前変更や説明の書き換えを `catalog.json` を触らずに行えます。
 >
 > 🔧 **v0.2.x** — tsx ソース起動時のエンドポイント 404（`./typert` による厳密登録）と cordis のインジェクションアクセス（`ctx.get` チャネル）を修正。
@@ -120,7 +122,7 @@ node tests/host-gateway.e2e.mjs   # ホストゲートウェイのエンドツ�
 node tests/claims.e2e.mjs         # 通常 node と tsx ソース起動でのエンドポイント主張
 ```
 
-> テストスクリプト内の絶対パスはローカルの DSH インストールを指す開発専用のもので、実行時の動作には影響しません。
+> テストが起動対象とする DSH ホストパッケージ（dsh-app-boot、dsh-typert-\*、dsh-api-gateway など）は devDependencies で DSH `0.1.5-rc.3` 版に固定され、エントリパスはすべて `import.meta.resolve` で解決されます。ビルド・テスト・型チェックにローカルの DSH インストールは不要です。
 
 ## 注意事項
 

@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 
@@ -27,6 +27,8 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.6.0** — An **DSH 0.1.5** angepasst (verifiziert gegen das `0.1.5-rc.3`-Paketset): Host- und Client-Hälfte bauen und bestehen die gesamte e2e-Suite gegen 0.1.5-rc.3, und die Testsuite läuft jetzt autark (keine lokale DSH-Installation nötig). Behebt auch eine Locale-Namespace-Kollision mit `@linxin666/dsh-web-ui-all`.
+>
 > 🆕 **2026-08-14 · v0.3.0** — Notizbearbeitung in der Oberfläche ist da: Klicke auf **Notizen bearbeiten** an einer beliebigen Karte, um einen Plugin umzubenennen oder seine Beschreibung zu ändern — ohne `catalog.json` anzufassen.
 >
 > 🔧 **v0.2.x** — 404-Fehler unter tsx-Source-Start (strikte `./typert`-Registrierung) und der cordis-Inject-Zugriff (`ctx.get`-Kanal) behoben.

@@ -7,7 +7,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-Plugin-4C9AFF.svg)](https://github.com/deepseek-ai/deepseek-harness)
-[![version](https://img.shields.io/badge/version-v0.4.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
+[![version](https://img.shields.io/badge/version-v0.6.0-success.svg)](https://github.com/2768651338/dsh-plugin-manager/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 [![topic: dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-7B68EE.svg)](https://github.com/topics/dsh-plugin)
@@ -29,6 +29,11 @@
 
 ---
 
+> 🆕 **2026-10-01 · v0.6.0** — Adapted to **DSH 0.1.5** (`0.1.5-rc.3`): the host
+> and client halves build and pass the full e2e suite against the 0.1.5-rc.3
+> package set, and the test suite now runs hermetically (no local DSH install
+> needed). Also fixes a locale-namespace collision with `@linxin666/dsh-web-ui-all`.
+>
 > 🆕 **2026-08-14 · v0.3.0** — In-UI notes editing is live: click **Edit notes** on any card to rename a plugin or rewrite its description in place. No more hand-editing `catalog.json`.
 >
 > 🏷️ **v0.4.0** — Package renamed to the owner-controlled scope @2768651338/dsh-plugin-manager (previous @dsh-external/* scope was not authorized).
@@ -54,8 +59,8 @@
 
 | Item | Value |
 |------|-------|
-| DSH version | **0.1.0-rc.5** (official installer, built-in source tree under `resources/harness`) |
-| Verified on | **2026-08-14**, web profile, Windows |
+| DSH version | **0.1.5** line (verified against the `0.1.5-rc.3` package set; 0.1.0-rc.5/6 remains compatible) |
+| Verified on | **2026-10-01**, web profile, Windows — host chain + strict typert registration covered by the e2e suite |
 | Install mechanism | `dsh plugin --profile web add` (bundle patch + dual-face row) |
 | Depends on | typert-loader / api-gateway / client-modules rows shipped in `dsh-base` + `dsh-web-app` |
 
@@ -160,7 +165,7 @@ Precedence: override file > built-in catalog > English short name.
 | Error mentions **404** or `invocation-unavailable` | Your installed version is older than 0.2.0 (missing `./typert` strict registration) — update and restart |
 | `cannot get property "remote.pluginManager" without inject` | Version older than 0.2.2 — update and refresh |
 | A toggle doesn't seem to work | Check `~/.dsh/cordis.patch.yml` keeps row-block structure (a `- ` dash at column 0); rows labeled "表达式控制" are `!!js`-controlled — edit the config file directly |
-| pnpm warns `peer range @deepseek-ai/*@* does not match resolved 0.1.0-rc.6` | Harmless — DSH ships these as prerelease `0.1.0-rc.6` and semver `*` doesn't match prereleases. v0.4.1+ declares `>=0.1.0-rc.0`; for other plugins add `peerDependencyRules.allowAny: ['@deepseek-ai/*']` to `pnpm-workspace.yaml` |
+| pnpm warns `peer range @deepseek-ai/*@* does not match resolved 0.1.5-rc.3` | Harmless — DSH ships these as prereleases and semver `*` doesn't match them. v0.6.0+ declares `>=0.1.0-rc.0 \|\| >=0.1.5-rc.0`; for other plugins add `peerDependencyRules.allowAny: ['@deepseek-ai/*']` to `pnpm-workspace.yaml` |
 | Where are the logs? | DSH host startup log (launcher console) for host errors; browser DevTools (F12) console for client errors |
 | Rollback | Remove the plugin's rows from `cordis.patch.yml`, use **恢复默认** for notes, or uninstall with the `remove` command above |
 
@@ -187,12 +192,16 @@ tests/                  smoke / end-to-end tests
 
 ```bash
 pnpm build                      # tsc + tsdown
+pnpm test                       # patch-file + backup smoke, claims/gateway/host e2e
 node tests/patch-file.smoke.mjs # 9 smoke tests for the patch editor
 node tests/host-gateway.e2e.mjs # host gateway end-to-end (incl. override-file contents)
 node tests/claims.e2e.mjs       # endpoint claims under plain-node and tsx source launch
 ```
 
-> Absolute paths inside the test scripts point at the local DSH installation and are development-only; they do not affect runtime behavior.
+> The DSH host packages the tests boot against (`dsh-app-boot`, `dsh-typert-*`,
+> `dsh-api-gateway`, …) are pinned devDependencies at the DSH `0.1.5-rc.3`
+> versions, and every entry path is resolved via `import.meta.resolve` — no
+> local DSH installation is needed to build, test, or typecheck.
 
 **Contributing.** Fork → change → `pnpm build` → run the tests above → open a PR against `main`. Small fixes (docs, catalog entries, translations) are welcome without prior discussion. Report issues with the DSH version and the exact error detail shown in the tab.
 
