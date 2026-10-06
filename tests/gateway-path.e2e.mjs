@@ -4,7 +4,6 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import assert from 'node:assert'
 import { boot } from '@deepseek-ai/dsh-app-boot'
 import { TypertRegistry } from '@deepseek-ai/dsh-typert-registry'

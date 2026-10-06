@@ -60,6 +60,16 @@ try {
   assert.strictEqual(toggle.ok, true)
   assert.strictEqual(toggle.value.reason, 'system')
 
+  // P0-3：importBackup 双参数编解码（json + null 审计标记）经严格注册路径可达主机。
+  const goodDoc = { format: 'dsh-plugin-manager-backup', version: 1, createdAt: 't', profile: 'web', overrides: {}, dependencies: {}, bundles: [] }
+  const probeImport = await handler('pluginManager/importBackup', { args: { json: JSON.stringify(goodDoc), allowNonRegistrySpecs: null } }, new AbortController().signal)
+  console.log('importBackup via handler:', JSON.stringify(probeImport.ok ? probeImport.value : probeImport.error))
+  assert.strictEqual(probeImport.ok, true, 'both params decode cleanly')
+  assert.strictEqual(probeImport.value.reason, 'profile-not-found', 'doc validated, flow reached profile check')
+  const badImport = await handler('pluginManager/importBackup', { args: { json: 'not-json', allowNonRegistrySpecs: null } }, new AbortController().signal)
+  assert.strictEqual(badImport.ok, true)
+  assert.strictEqual(badImport.value.reason, 'invalid-format')
+
   await ctx.fiber.dispose()
   console.log('CLAIMS E2E: ALL PASS')
 } finally {

@@ -68,7 +68,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 
 | Funktion | Beschreibung |
 |----------|--------------|
-| 📚 Chinesischer Katalog | 190+ eingebaute Einträge (Name / Beschreibung / Kategorie) mit Fallback und Anpassung je Plugin |
+| 📚 Zweisprachiger Katalog | 195+ eingebaute Einträge (Name / Beschreibung / Kategorie) auf Chinesisch und Englisch — die englische Oberfläche zeigt englische Texte, sonst Kurzname + englischer Hinweis statt Chinesisch; mit Fallback und Anpassung je Plugin |
 | 🔘 Ein-Klick-Schalter | Schreibt `~/.dsh/cordis.patch.yml` (globale Ebene); der HMR-Watcher von DSH wendet es in ~1 Sekunde neu an; Aktivieren schreibt ein explizites `disabled: false`, das untere Ebenen überschreibt |
 | ✏️ Notizen in der UI | „Notizen bearbeiten“ an jeder Karte ändert den chinesischen Namen/die Beschreibung (`~/.dsh/plugin-manager/catalog.json`) mit Ein-Klick-Wiederherstellung |
 | 🛡️ Sicherungen | Bootstrap-/Transport-/Einstellungs-Shell-Zeilen als „System“ gesperrt; `!!js`-Ausdruckszeilen als „Ausdrucksgesteuert“ markiert |
@@ -96,6 +96,10 @@ Klicke an einer Karte auf **Notizen bearbeiten**. Speichern mit beiden leeren Fe
 ```
 
 Rangfolge: Override-Datei > eingebauter Katalog > englischer Kurzname.
+
+## Sicherheit
+
+Dieses Plugin bringt **keine eigene Authentifizierung** mit — wer seine Schreiboperationen erreicht (Ein-/Ausschalten, Notizen, Backup-Import), entscheidet ausschließlich die Vertrauensbarriere der DSH-Web-App. Standardmäßig lauscht der Web-Server nur auf dem Loopback-Interface. Wenn du den DSH-Web-Server auf eine Nicht-Loopback-Adresse setzt (Optionen `host`/`port`), **kann jeder, der diesen Port erreicht, Plugins umschalten und deine `cordis.patch.yml` sowie Profil-Abhängigkeiten umschreiben** — lege den Web-Server in nicht vertrauenswürdigen Netzwerken niemals offen.
 
 ## Projektstruktur
 

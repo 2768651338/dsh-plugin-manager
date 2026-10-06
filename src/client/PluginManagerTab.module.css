@@ -23,6 +23,31 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* 来源筛选空状态（issue #1）：一行说明 + 「查看全部」兜底按钮。 */
+.originEmpty {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.originEmptyAction {
+  min-height: 24px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  padding: 2px 10px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.originEmptyAction:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
 .failure {
   display: flex;
   align-items: center;
@@ -111,7 +136,8 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);
 }
 
-.category select {
+.category select,
+.origin select {
   height: 36px;
   border: 1px solid var(--dsw-alias-border-l2);
   border-radius: 8px;
@@ -123,7 +149,8 @@
   outline: none;
 }
 
-.category select:focus-visible {
+.category select:focus-visible,
+.origin select:focus-visible {
   border-color: var(--dsw-alias-state-business-primary);
 }
 
@@ -256,6 +283,11 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* 来源徽标（issue #1）：内置行弱化为三级文字色，官方/社区保持默认中性，不加新色板。 */
+.badge[data-kind='builtin'] {
+  color: var(--dsw-alias-label-tertiary);
+}
+
 .moduleName {
   display: block;
   margin-top: 2px;
@@ -279,6 +311,89 @@
   font-size: 11px;
   line-height: 17px;
   overflow-wrap: anywhere;
+}
+
+.messageRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 0;
+}
+
+.messageRow .message {
+  margin: 0;
+}
+
+/* 撤销按钮（P1-6）：消息行内的小号文本按钮，视觉权重低于启停开关。 */
+.undoButton {
+  flex: none;
+  min-height: 22px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  padding: 1px 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.undoButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.undoButton:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* 顶部警告横幅（P1-2 / P1-5）：警示色描边，无阴影，随主题令牌走。 */
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-state-warning-primary, #c98a2c) 45%, transparent);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--dsw-alias-state-warning-primary, #c98a2c) 8%, transparent);
+}
+
+.bannerText {
+  margin: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.bannerText[data-kind='error'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.bannerAction {
+  align-self: flex-start;
+  min-height: 24px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  padding: 2px 10px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.bannerAction:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.bannerAction:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .message {
@@ -590,4 +705,119 @@
 .importButton:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+/* 导入确认面板（P0-3）：非常规依赖逐项勾选，样式沿用备份区的设计令牌。 */
+.confirmPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--dsw-alias-bg-module-platform);
+}
+
+.confirmHeading {
+  margin: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.confirmList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.confirmItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  word-break: break-all;
+  cursor: pointer;
+}
+
+.confirmItem code {
+  font-size: 12px;
+}
+
+.confirmItem span {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* 导入预览（P1-3）：按段落分组的 diff 清单，超长时内部滚动。 */
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.previewLabel {
+  margin: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.previewList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.previewItem {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  word-break: break-all;
+}
+
+.previewItem > span:last-child {
+  color: var(--dsw-alias-label-tertiary);
+  min-width: 0;
+}
+
+.previewKind {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 16px;
+  border-radius: 4px;
+  padding: 0 5px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.previewKind[data-kind='add'] {
+  background: color-mix(in srgb, var(--dsw-alias-state-success-primary) 10%, transparent);
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.previewKind[data-kind='update'] {
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 10%, transparent);
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.previewKind[data-kind='patch'] {
+  background: color-mix(in srgb, var(--dsw-alias-state-warning-primary, #c98a2c) 10%, transparent);
+  color: var(--dsw-alias-state-warning-primary, #c98a2c);
 }

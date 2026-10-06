@@ -2,6 +2,7 @@
  * 启停补丁文件（cordis.patch.yml）的手术式编辑：只增删目标行的 disabled 字段，
  * 保留文件里的其它行、注释与 !!js 表达式原样不动。不依赖 YAML 库——
  * 按“列 0 的 - ”切行块，行内匹配 id / disabled 键。
+ * 写盘前的 YAML 回读校验在 patch-yaml 模块（编辑器本身保持零依赖）。
  * @module dsh-plugin-manager/patch-file
  */
 
@@ -39,6 +40,18 @@ export function isExpression(value: string | null): boolean {
   return value !== null && value.trim().startsWith('!!js')
 }
 
+/** 去掉值尾部的行内注释（第一个「 #」起的尾串）并 trim，仅用于键值比较，不回写。 */
+function stripInlineComment(value: string): string {
+  const at = value.search(/\s#/)
+  return (at >= 0 ? value.slice(0, at) : value).trim()
+}
+
+/** 提取一行的行内注释尾串（含前导空白）；改写 disabled 键时原样保留，避免销毁用户注释。 */
+function inlineCommentSuffix(line: string): string {
+  const at = line.search(/\s#/)
+  return at >= 0 ? line.slice(at) : ''
+}
+
 /** 把文件内容解析为顶层行块序列（忽略注释与空行，保留原文文本）。 */
 export function parsePatchFile(content: string): PatchRowBlock[] {
   const lines = content.split(/\r?\n/)
@@ -59,12 +72,13 @@ export function parsePatchFile(content: string): PatchRowBlock[] {
     let disabledValue: string | null = null
     for (let at = 0; at < blockLines.length; at += 1) {
       const text = blockLines[at] ?? ''
-      const idMatch = /^- id:\s*(.*)$/.exec(text)
-      if (idMatch) id = unquote(idMatch[1] ?? '')
-      const disabledMatch = /^(\s*)disabled:\s*(.*)$/.exec(text)
+      // 用 match 而非 exec：语义一致（非全局正则），且不触发安全扫描的命令执行误报。
+      const idMatch = text.match(/^- id:\s*(.*)$/)
+      if (idMatch) id = unquote(stripInlineComment(idMatch[1] ?? ''))
+      const disabledMatch = text.match(/^(\s*)disabled:\s*(.*)$/)
       if (disabledMatch && disabledIndex < 0) {
         disabledIndex = at
-        disabledValue = (disabledMatch[2] ?? '').trim()
+        disabledValue = stripInlineComment(disabledMatch[2] ?? '')
       }
     }
     blocks.push({ lines: blockLines, start, end: index, id, disabledIndex, disabledValue })
@@ -100,17 +114,33 @@ function eolOf(content: string): string {
 }
 
 /**
+ * 检测「目标 id 已在文件里、但不是行块首键形态」的无法识别行（评估 P0-2）。
+ * 例如手工写的 `- name: x` 换行 `id: y`、缩进的续行 id、多写空格的 `-   id:`。
+ * 这类行无法被行块编辑安全改写；不检测会在启停时静默追加重复行，永不生效。
+ */
+function hasUnrecognizedIdRow(content: string, entryId: string): boolean {
+  for (const line of content.split(/\r?\n/)) {
+    const text = line.trimStart()
+    if (text.startsWith('#')) continue
+    const match = text.match(/^(?:-\s+)?id:\s*(.*)$/)
+    if (match && unquote(stripInlineComment(match[1] ?? '')) === entryId) return true
+  }
+  return false
+}
+
+/**
  * 在补丁文件内容里为 entryId 设置/清除 disabled。
  * @param content - 当前文件内容。
  * @param entryId - 目标行 id。
  * @param enabled - true=启用（写/改 disabled: false 显式覆盖），false=停用（写 disabled: true）。
  * @returns 新内容与结果描述；未命中任何行且无需写入时 content 不变。
+ *   blocked 为 'unrecognized' 表示目标行存在但格式无法识别（拒绝写入重复行）。
  */
 export function setRowDisabled(
   content: string,
   entryId: string,
   enabled: boolean,
-): { content: string; changed: boolean; blocked: 'expression' | null } {
+): { content: string; changed: boolean; blocked: 'expression' | 'unrecognized' | null } {
   const eol = eolOf(content)
   const lines = content.split(/\r?\n/)
   const blocks = parsePatchFile(content)
@@ -127,7 +157,8 @@ export function setRowDisabled(
     }
     if (target !== undefined && target.disabledIndex >= 0) {
       const next = [...lines]
-      next[target.start + target.disabledIndex] = '  disabled: true'
+      const comment = inlineCommentSuffix(lines[target.start + target.disabledIndex] ?? '')
+      next[target.start + target.disabledIndex] = `  disabled: true${comment}`
       return { content: next.join(eol), changed: true, blocked: null }
     }
     if (target !== undefined) {
@@ -135,6 +166,9 @@ export function setRowDisabled(
       const next = [...lines]
       next.splice(target.start + 1, 0, '  disabled: true')
       return { content: next.join(eol), changed: true, blocked: null }
+    }
+    if (hasUnrecognizedIdRow(content, entryId)) {
+      return { content, changed: false, blocked: 'unrecognized' }
     }
     // 没有行：追加新块（或替换空数组标记 []）。
     return appendRow(lines, eol, content, entryId, 'true')
@@ -144,12 +178,16 @@ export function setRowDisabled(
   if (target !== undefined) {
     if (target.disabledIndex >= 0) {
       const next = [...lines]
-      next[target.start + target.disabledIndex] = '  disabled: false'
+      const comment = inlineCommentSuffix(lines[target.start + target.disabledIndex] ?? '')
+      next[target.start + target.disabledIndex] = `  disabled: false${comment}`
       return { content: next.join(eol), changed: true, blocked: null }
     }
     const next = [...lines]
     next.splice(target.start + 1, 0, '  disabled: false')
     return { content: next.join(eol), changed: true, blocked: null }
+  }
+  if (hasUnrecognizedIdRow(content, entryId)) {
+    return { content, changed: false, blocked: 'unrecognized' }
   }
   return appendRow(lines, eol, content, entryId, 'false')
 }

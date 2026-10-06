@@ -68,7 +68,7 @@ dsh plugin --profile web add file:./dsh-plugin-manager
 
 | Funcionalidade | Descrição |
 |----------------|-----------|
-| 📚 Catálogo em chinês | Mais de 190 entradas integradas (nome / descrição / categoria) com fallback e personalização por plugin |
+| 📚 Catálogo bilíngue | Mais de 195 entradas integradas (nome / descrição / categoria) em chinês e inglês — a interface em inglês mostra textos em inglês e, quando faltam, o nome curto + uma nota em inglês em vez de chinês; com fallback e personalização por plugin |
 | 🔘 Interruptor de um clique | Escreve em `~/.dsh/cordis.patch.yml` (camada global); o watcher HMR do DSH reaplica em ~1 segundo; ativar grava um `disabled: false` explícito que sobrescreve camadas inferiores |
 | ✏️ Notas na interface | “Editar notas” em cada cartão altera o nome/descrição em chinês (`~/.dsh/plugin-manager/catalog.json`) com restauração do padrão em um clique |
 | 🛡️ Proteções | Linhas de bootstrap/transporte/shell de configurações bloqueadas como “Sistema”; linhas com expressões `!!js` rotuladas como “Controladas por expressão” |
@@ -96,6 +96,10 @@ Clique em **Editar notas** em qualquer cartão. Salvar com os dois campos vazios
 ```
 
 Precedência: arquivo de sobrescrita > catálogo integrado > nome curto em inglês.
+
+## Segurança
+
+Este plugin **não inclui autenticação própria**: quem pode alcançar suas operações de escrita (ativar/desativar, notas, importação de backup) é decidido inteiramente pela barreira de confiança do aplicativo web do DSH. Por padrão, o servidor web escuta apenas na interface de loopback. Se você configurar o servidor web do DSH em um endereço fora do loopback (opções `host`/`port`), **qualquer pessoa que alcançar essa porta poderá alternar plugins e reescrever seu `cordis.patch.yml` e as dependências do perfil** — não exponha o servidor web a redes não confiáveis.
 
 ## Estrutura do projeto
 

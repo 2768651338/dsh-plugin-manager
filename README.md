@@ -74,7 +74,7 @@
 
 > The official launcher boots via tsx from source; this plugin's strict `./typert` registration is specifically designed to work under both plain-node and tsx source launch (covered by `tests/claims.e2e.mjs`). If you run a different DSH version, re-run the test suite before reporting issues.
 >
-> **DSH 0.2.0 note:** the `dsh-base` bundle now ships an official plugin manager (`@deepseek-ai/dsh-plugin-manager`, row id `plugin-manager`). This plugin's bundle patch inserts the same row id, and the later bundle layer wins — so installing this plugin replaces the official host row. The official *sidebar* panel (`@deepseek-ai/dsh-client-ui-plugin-manager`) is a separate surface and may coexist with this plugin's Settings tab.
+> **DSH 0.2.0 note:** the `dsh-base` bundle now ships an official plugin manager (`@deepseek-ai/dsh-plugin-manager`, row id `plugin-manager`). This plugin's bundle patch inserts the same row id, and the later bundle layer wins — so installing this plugin replaces the official host row. The official *sidebar* panel (`@deepseek-ai/dsh-client-ui-plugin-manager`) is a separate surface and may coexist with this plugin's Settings tab. If both host rows are ever loaded at the same time (the takeover did not happen as expected), the tab detects it at runtime and shows a compatibility warning banner.
 
 ## Install / Uninstall
 
@@ -133,22 +133,25 @@ dsh plugin --profile web add github:2768651338/dsh-plugin-manager#main
 | Credentials | Never read |
 | User data | Never read (no access to sessions, messages, or prompts) |
 
+**Security model.** This plugin ships **no authentication of its own** — who can reach its write operations (toggles, notes edits, backup import) is decided entirely by DSH's web-app trust barrier. Under the default configuration the web server listens on the loopback interface and only local sessions can call the RPC endpoints; that is the assumption this plugin is built on. If you configure the DSH web server to listen on a non-loopback address (the `host`/`port` launch options), **anyone who can reach that port can toggle plugins, rewrite your `cordis.patch.yml`, and change profile dependencies** — do not expose the web server to untrusted networks. Also note the tab footer displays two local file paths (the patch and override files) as returned by the `list` snapshot, so LAN-visible sessions can learn those paths.
+
 ## Features
 
 | Feature | Description |
 |---------|-------------|
-| 📚 Chinese catalog | 190+ built-in entries (name / description / category), fallback + per-plugin customization |
+| 📚 Bilingual catalog | 190+ built-in entries (name / description / category) in Chinese and English — the English UI shows English names/descriptions, falling back to the module short name + an English note instead of Chinese. Unlisted modules fall back automatically; every entry is customizable |
 | 🔘 One-click toggle | Writes `~/.dsh/cordis.patch.yml` (global layer); DSH's HMR watcher re-applies within ~1 second; enabling writes an explicit `disabled: false` that overrides lower layers |
 | ✏️ In-UI notes | "Edit notes" on each card edits the Chinese name/description (`~/.dsh/plugin-manager/catalog.json`), with one-click restore-to-default |
-| 🛡️ Safety guards | Bootstrap/transport/settings-shell rows locked as "System"; `!!js`-expression rows labeled "Expression-controlled" |
-| 🔍 Search & filter | Search by name/description/module, filter by category, enabled-count summary |
-| 💾 Backup & restore | Export notes + plugin list (profile `dependencies`/`bundles`) + the enable/disable patch to one JSON file; import merges (never removes your existing entries) and prints the exact reinstall command |
+| 🛡️ Safety guards | Bootstrap/transport/settings-shell rows locked as "System"; `!!js`-expression rows labeled "Expression-controlled"; a warning banner appears if the official plugin manager is still loaded alongside (takeover did not happen); a broken override file is reported with a one-click rename-aside rescue |
+| 🔍 Search & filter | Search by name/description/module (matching both languages), filter by category, enabled-count summary |
+| ↩️ Toggle undo | Disabling shows a 9-second in-card **Undo** button instead of a no-confirm instant change |
+| 💾 Backup & restore | Export notes + plugin list (profile `dependencies`/`bundles`) + the enable/disable patch to one JSON file; import **previews every change first** (notes to add/overwrite, dependencies, bundles, toggle rows) and only writes after you confirm — merges, never removes your existing entries. Non-registry dependency sources (`git:`/`file:`/URLs/shorthand) require per-item confirmation; unchecked entries are skipped |
 
 ## How It Works
 
 | Half | File | Role |
 |------|------|------|
-| Host | `lib/index.js` | Registers the `pluginManager` cordis service (Typert remote): `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `importBackup`. Toggles use surgical patch-file editing — comments and `!!js` expressions preserved, file re-read before write to merge concurrent edits. |
+| Host | `lib/index.js` | Registers the `pluginManager` cordis service (Typert remote): `list` / `setEnabled` / `setOverride` / `removeOverride` / `exportBackup` / `previewBackup` / `importBackup` / `quarantineOverrides`. Toggles use surgical patch-file editing — comments and `!!js` expressions preserved. Every file-writing method shares one serialized write queue (no cross-operation lost updates), and import runs as a read-only preview followed by a confirmed merge. |
 | Host | `lib/typert.host.js` | Exports `./typert`; the typert-loader registers it as **strict invocation definitions**. Crucial fix: under tsx source launch the gateway and an external plugin can hold two copies of typert-protocol — decorator markers are invisible across copies (symptom: every call 404s). Strict registration goes through the shared registry, sidestepping module-instance identity. |
 | Browser | `lib/client.js` | Mounts the `pluginManager` remote namespace via the inject-free `ctx.get()` channel (avoids a self-mount deadlock) and registers the Plugin Manager tab in the `settings.plugins.tab` slot. |
 
@@ -202,11 +205,22 @@ tests/                  smoke / end-to-end tests
 
 ```bash
 pnpm build                      # tsc + tsdown
-pnpm test                       # patch-file + backup smoke, claims/gateway/host e2e
-node tests/patch-file.smoke.mjs # 9 smoke tests for the patch editor
+pnpm lint                       # eslint (flat config, lenient rules)
+pnpm typecheck                  # tsc --noEmit
+pnpm test                       # patch-file / patch-yaml / fs-safe / client-util / backup smokes + claims/gateway/host e2e
+node tests/patch-file.smoke.mjs # patch editor smoke tests
+node tests/client-util.smoke.mjs# browser-half pure-function smoke tests
 node tests/host-gateway.e2e.mjs # host gateway end-to-end (incl. override-file contents)
 node tests/claims.e2e.mjs       # endpoint claims under plain-node and tsx source launch
 ```
+
+CI (GitHub Actions) runs `lint` + `typecheck` + `build` + `test` on node 22/24 for every push and PR. Note the CI pins verify only the pinned dev versions below — before a release, re-run the suite manually against any newer DSH rc (see the compatibility note).
+
+> Artifact shape note: the two hand-written typert artifacts (`src/client/remote.ts`,
+> `src/typert-host.ts`) keep their generator-aligned descriptor shapes but share one
+> schema source (`src/schemas.ts`) — edit schemas there, not in the artifacts. If a
+> future host ever requires byte-exact comparison against generator output, split
+> the schemas back out.
 
 > The DSH host packages the tests boot against (`dsh-app-boot`, `dsh-typert-*`,
 > `dsh-api-gateway`, …) are pinned devDependencies at the DSH `0.2.0-rc.2`

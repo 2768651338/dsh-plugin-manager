@@ -26,7 +26,7 @@ const fromGateway = import.meta.resolve(
 console.log('from gateway:         ', fromGateway)
 
 // 4) 真实路径对比（node:fs realpath）
-const { realpathSync, existsSync } = await import('node:fs')
+const { realpathSync } = await import("node:fs")
 const realOf = (u) => {
   try { return realpathSync(require2('node:url').fileURLToPath(u)) } catch (e) { return 'ERR ' + e.code }
 }

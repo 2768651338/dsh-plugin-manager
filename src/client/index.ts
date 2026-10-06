@@ -14,7 +14,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { RemoteResult, TypertRemoteNamespaceMap } from '@deepseek-ai/dsh-typert-protocol'
-import type { BackupExportResult, BackupImportResult, CatalogEditResult, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
+import type { BackupExportResult, BackupImportResult, BackupPreviewResult, CatalogEditResult, CatalogRepairResult, PluginManagerSnapshot, SetEnabledResult } from '../types.ts'
 import { PluginManagerTab, type PluginManagerTabInjected } from './PluginManagerTab.tsx'
 import { en, zh } from './locales.ts'
 import { TYPERT_REMOTE } from './remote.ts'
@@ -38,6 +38,10 @@ export async function apply(ctx: ClientContext): Promise<void> {
   }, 'dsh-plugin-manager: remote mount')
 
   const t = ctx.locale.bind(NS)
+
+  // 当前界面语言（评估 P2-9）：快照里的目录内容是双语的，由界面按语言取用。
+  // 非 zh 一律按英文渲染（与宿主 FALLBACK_LOCALE=en 的兜底方向一致）。
+  const localeLang = (): 'zh' | 'en' => (ctx.locale.getLocale().active.startsWith('zh') ? 'zh' : 'en')
 
   // 2) 注入面：解包 RemoteResult，抛错给界面层处理。
   // 不能把 remote.pluginManager 写进 inject（挂载发生在 apply 内，注入会让自身 fiber 永久 pending），
@@ -81,14 +85,28 @@ export async function apply(ctx: ClientContext): Promise<void> {
     }
     return result.value
   }
-  const importBackup: PluginManagerTabInjected['importBackup'] = async (json) => {
-    const result: RemoteResult<BackupImportResult> = await namespace().importBackup(json)
+  const importBackup: PluginManagerTabInjected['importBackup'] = async (json, allowNonRegistrySpecs) => {
+    const result: RemoteResult<BackupImportResult> = await namespace().importBackup(json, allowNonRegistrySpecs)
     if (!result.ok) {
       throw new Error(`pluginManager.importBackup failed: ${result.error.code}: ${result.error.message}`)
     }
     return result.value
   }
-  const injected = (): PluginManagerTabInjected => ({ list, setEnabled, setOverride, removeOverride, exportBackup, importBackup })
+  const previewBackup: PluginManagerTabInjected['previewBackup'] = async (json) => {
+    const result: RemoteResult<BackupPreviewResult> = await namespace().previewBackup(json)
+    if (!result.ok) {
+      throw new Error(`pluginManager.previewBackup failed: ${result.error.code}: ${result.error.message}`)
+    }
+    return result.value
+  }
+  const quarantineOverrides: PluginManagerTabInjected['quarantineOverrides'] = async () => {
+    const result: RemoteResult<CatalogRepairResult> = await namespace().quarantineOverrides()
+    if (!result.ok) {
+      throw new Error(`pluginManager.quarantineOverrides failed: ${result.error.code}: ${result.error.message}`)
+    }
+    return result.value
+  }
+  const injected = (): PluginManagerTabInjected => ({ list, setEnabled, setOverride, removeOverride, exportBackup, importBackup, previewBackup, quarantineOverrides, localeLang })
 
   // 3) 注册标签页（排在“插件列表”之后）。
   ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({

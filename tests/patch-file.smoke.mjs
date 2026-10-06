@@ -116,4 +116,55 @@ let pass = 0
   pass += 1
 }
 
+// 10) 多行形态的 id（非行块首键）→ 拒绝为 unrecognized，不追加重复行
+{
+  const before = '- name: x\n  id: mystery-row\n  disabled: false\n'
+  const out = setRowDisabled(before, 'mystery-row', false)
+  assert.strictEqual(out.blocked, 'unrecognized')
+  assert.strictEqual(out.content, before)
+  const out2 = setRowDisabled(before, 'mystery-row', true)
+  assert.strictEqual(out2.blocked, 'unrecognized')
+  assert.strictEqual(out2.content, before)
+  cases.push('multi-line id row rejected')
+  pass += 1
+}
+
+// 11) 缩进续行 id / 多空格 id → 同样拒绝
+{
+  const indented = '- id: other\n  config:\n    rows:\n      - id: nested-target\n'
+  // 注意：嵌套在块内非首键位置的 id 也按无法识别处理（宁可拒绝也不静默追加）
+  const out = setRowDisabled(indented, 'nested-target', false)
+  assert.strictEqual(out.blocked, 'unrecognized')
+  const spaced = '-   id: spaced-row\n  disabled: false\n'
+  const out2 = setRowDisabled(spaced, 'spaced-row', true)
+  assert.strictEqual(out2.blocked, 'unrecognized')
+  assert.strictEqual(out2.content, spaced)
+  cases.push('indented/spaced id rows rejected')
+  pass += 1
+}
+
+// 12) 行内注释保留：disabled 改写时注释不被销毁；值比较剥离注释后幂等
+{
+  const before = '- id: noted-row\n  disabled: true # 保持离线\n'
+  const again = setRowDisabled(before, 'noted-row', false)
+  assert.strictEqual(again.changed, false, 'comment stripped for comparison => idempotent')
+  const enabled = setRowDisabled(before, 'noted-row', true)
+  assert.strictEqual(enabled.changed, true)
+  assert.ok(enabled.content.includes('disabled: false # 保持离线'), 'inline comment preserved on rewrite')
+  const parsed = parsePatchFile(enabled.content)
+  assert.strictEqual(parsed[0].disabledValue, 'false')
+  cases.push('inline comment preserved')
+  pass += 1
+}
+
+// 13) id 带行内注释也能被识别
+{
+  const before = '- id: noted-2 # 我加的备注\n  disabled: false\n'
+  const out = setRowDisabled(before, 'noted-2', false)
+  assert.strictEqual(out.changed, true)
+  assert.ok(out.content.includes('disabled: true'))
+  cases.push('id with inline comment recognized')
+  pass += 1
+}
+
 console.log('PASS ' + pass + '/' + (cases.length) + ': ' + cases.join(', '))

@@ -3,6 +3,7 @@
   "description": "插件管家——图形化插件管理：中文名与用途说明目录 + 一键启停（写入全局 cordis.patch.yml，实时热生效）",
   "version": "0.7.0",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "main": "lib/index.js",
   "exports": {
     ".": {
@@ -46,10 +47,14 @@
       "optional": true
     }
   },
+  "dependencies": {
+    "js-yaml": "^4.3.2"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json && tsdown --config ./tsdown.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/patch-file.smoke.mjs && node tests/backup.smoke.mjs && node tests/claims.e2e.mjs && node tests/gateway-path.e2e.mjs && node tests/host-gateway.e2e.mjs"
+    "lint": "eslint .",
+    "test": "node tests/patch-file.smoke.mjs && node tests/patch-yaml.smoke.mjs && node tests/fs-safe.smoke.mjs && node tests/client-util.smoke.mjs && node tests/origin.smoke.mjs && node tests/backup.smoke.mjs && node tests/claims.e2e.mjs && node tests/gateway-path.e2e.mjs && node tests/host-gateway.e2e.mjs"
   },
   "files": [
     "lib/index.js",
@@ -81,13 +86,17 @@
     "@deepseek-ai/dsh-typert-loader": "0.2.0-rc.2",
     "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
     "@deepseek-ai/dsh-typert-registry": "0.2.0-rc.2",
+    "@eslint/js": "^10.0.1",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.2.0",
     "@types/react": "^18.3.1",
-    "js-yaml": "^4.3.2",
+    "eslint": "^10.11.0",
+    "globals": "^17.13.0",
     "lightningcss": "^1.33.0",
     "react": "^18.3.1",
     "tsdown": "^0.22.14",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.0",
     "zod": "^4.4.3"
   }
 }

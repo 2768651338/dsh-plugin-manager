@@ -9,7 +9,7 @@
  * @module dsh-plugin-manager
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { basename, dirname, join, resolve } from 'node:path'
@@ -18,18 +18,34 @@ import type {} from '@deepseek-ai/cordis-plugin-loader'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import {
   CATALOG,
+  CATEGORY_LABELS,
   FALLBACK_DESC,
+  FALLBACK_DESC_EN,
   SYSTEM_MODULES,
   SYSTEM_ROW_IDS,
   type PluginCategory,
 } from './catalog.ts'
-import { initialPatchFile, isExpression, parsePatchFile, setRowDisabled } from './patch-file.ts'
-import { buildBackupDocument, mergeBundles, mergeDependencies, mergeOverrides, validateBackupDocument } from './backup.ts'
+import { initialPatchFile, setRowDisabled } from './patch-file.ts'
+import { assertWritablePatchYaml } from './patch-yaml.ts'
+import { createTimestampedBackup, localDayKey, pruneBackups, stampOf, writeFileAtomic } from './fs-safe.ts'
+import {
+  auditDependencySpecs,
+  buildBackupDocument,
+  buildBackupPreview,
+  mergeBundles,
+  mergeDependencies,
+  mergeOverrides,
+  mergePatchRows,
+  validateBackupDocument,
+} from './backup.ts'
+import { isDeclaredDependency, isOfficialModule } from './origin.ts'
 import type {
   BackupExportResult,
   BackupImportResult,
+  BackupPreviewResult,
   CatalogEditResult,
   CatalogOverrides,
+  CatalogRepairResult,
   PluginManagerEntry,
   PluginManagerFiberPhase,
   PluginManagerSnapshot,
@@ -60,8 +76,27 @@ function overridesPath(): string {
   return join(dshHome(), 'plugin-manager', 'catalog.json')
 }
 
+/** 是否为 file: 方式本地加载的模块（评估 P2-5）。 */
+function isLocalModule(moduleName: string): boolean {
+  return /^file:/i.test(moduleName)
+}
+
+/** 把 file:// URL（或 file: 路径）折成短名：取 basename 去常见脚本扩展名（评估 P2-5）。 */
+function fileModuleShortName(moduleName: string): string | undefined {
+  if (!isLocalModule(moduleName)) return undefined
+  try {
+    const base = basename(fileURLToPath(moduleName)).replace(/\.(?:m|c)?js$/i, '')
+    return base.length > 0 ? base : undefined
+  } catch {
+    // 非法 file: URL：退回通用短名逻辑。
+    return undefined
+  }
+}
+
 /** 紧凑一个模块名（去掉作用域与常见前缀）。 */
 function moduleShortName(moduleName: string): string {
+  const fromFile = fileModuleShortName(moduleName)
+  if (fromFile !== undefined) return fromFile
   const unscoped = moduleName.startsWith('@') ? moduleName.slice(moduleName.indexOf('/') + 1) : moduleName
   return unscoped
     .replace(/^cordis:/, '')
@@ -88,16 +123,32 @@ const FIBER_PHASE: Readonly<Record<number, PluginManagerFiberPhase>> = {
   [FIBER_STATE.UNLOADING]: 'unloading',
 }
 
-/** 读取目录覆盖文件；不存在或损坏时返回空表（防呆：不阻断列表）。 */
-function readOverrides(): CatalogOverrides {
+/** 官方插件管理器模块名（dsh-base 内置，行 id 同为 plugin-manager；评估 P1-5）。 */
+const OFFICIAL_PLUGIN_MANAGER = '@deepseek-ai/dsh-plugin-manager'
+
+/** 兼容性警告代码：官方插件管理器行仍被加载、与本插件并存。 */
+const COMPAT_OFFICIAL_COEXISTS = 'official-plugin-manager-coexists'
+
+/**
+ * 读取目录覆盖文件（评估 P1-2）：文件不存在返回空表（正常形态）；
+ * 存在但读不出来/损坏时同样返回空表并携带 warning（不阻断列表，由界面横幅提示）。
+ */
+function readOverrides(): { overrides: CatalogOverrides; warning?: string } {
+  let raw: string
   try {
-    const parsed: unknown = JSON.parse(readFileSync(overridesPath(), 'utf8'))
+    raw = readFileSync(overridesPath(), 'utf8')
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { overrides: {} }
+    return { overrides: {}, warning: error instanceof Error ? error.message : String(error) }
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw)
     if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return parsed as CatalogOverrides
+      return { overrides: parsed as CatalogOverrides }
     }
-    return {}
-  } catch {
-    return {}
+    return { overrides: {}, warning: '文件内容不是 JSON 对象' }
+  } catch (error) {
+    return { overrides: {}, warning: error instanceof Error ? error.message : String(error) }
   }
 }
 
@@ -138,9 +189,30 @@ function readProfileManifest(path: string): ProfileManifest {
   return parsed as ProfileManifest
 }
 
-/** 写回 profile 清单（2 空格缩进 + 末尾换行，与 dsh 的 writeProfileManifest 一致）。 */
+/** 写回 profile 清单（2 空格缩进 + 末尾换行，与 dsh 的 writeProfileManifest 一致；原子替换）。 */
 function writeProfileManifest(path: string, manifest: ProfileManifest): void {
-  writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n', 'utf8')
+  writeFileAtomic(path, JSON.stringify(manifest, null, 2) + '\n')
+}
+
+/** 补丁备份（.bak）滚动保留份数。 */
+const PATCH_BACKUP_KEEP = 5
+
+/** 备份 JSON 的大小上限（字符数，约 2MB 量级；防自我 DoS 与异常文件）。 */
+const MAX_IMPORT_JSON_CHARS = 2 * 1024 * 1024
+
+/**
+ * 服务端输入长度上限（评估 P2-8）：客户端 maxLength 只是礼貌，服务端限制才是限制。
+ * 上限放宽到「显然异常才拦」的量级（比客户端 60/200 宽），让正常长尾输入不被误伤。
+ */
+const MAX_MODULE_NAME_CHARS = 200
+const MAX_OVERRIDE_NAME_CHARS = 200
+const MAX_OVERRIDE_DESC_CHARS = 1000
+
+/** 模块名/名称/说明超限的统一拒绝（评估 P2-8）。 */
+function tooLong(field: 'moduleName' | 'name' | 'desc'): CatalogEditResult {
+  const limit = field === 'moduleName' ? MAX_MODULE_NAME_CHARS : field === 'name' ? MAX_OVERRIDE_NAME_CHARS : MAX_OVERRIDE_DESC_CHARS
+  const label = field === 'moduleName' ? '模块名' : field === 'name' ? '名称' : '说明'
+  return { accepted: false, reason: 'invalid-input', message: `${label}过长（上限 ${limit} 字符）` }
 }
 
 /** 目录缺失时的兜底分类。 */
@@ -153,8 +225,12 @@ const OTHER_CATEGORY = 'other' as PluginCategory
 export class PluginManagerGateway extends TypertRemoteService {
   static inject = ['loader']
 
-  /** 串行化补丁文件写操作，避免并发开关互相覆盖。 */
-  private toggleQueue: Promise<void> = Promise.resolve()
+  /**
+   * 全局写队列（评估 P1-1）：所有落盘方法（启停/目录编辑/备份导入/损坏文件改名）
+   * 共用同一条串行队列——此前三条独立队列互不感知，导入与启停并发时会互相覆盖、
+   * 静默丢更新。同一文件的所有写入方必须排同一条队。
+   */
+  private writeQueue: Promise<void> = Promise.resolve()
 
   constructor(ctx: Context) {
     super(ctx, 'pluginManager')
@@ -180,16 +256,49 @@ export class PluginManagerGateway extends TypertRemoteService {
     return existsSync(join(dir, 'package.json')) ? dir : undefined
   }
 
-  /** 串行化覆盖文件写操作。 */
-  private overrideQueue: Promise<void> = Promise.resolve()
+  /**
+   * 读取当前 profile 的依赖表（issue #1：推导「用户安装」信号）。
+   * 定位失败或文件缺失/损坏时按空表兜底——来源标记是增强信息，绝不因它阻断列表。
+   */
+  private profileDependencies(): Readonly<Record<string, string>> {
+    try {
+      const dir = this.profileDir()
+      if (dir === undefined) return {}
+      const manifest = readProfileManifest(join(dir, 'package.json'))
+      const deps = manifest.dependencies
+      if (deps === null || typeof deps !== 'object' || Array.isArray(deps)) return {}
+      return deps
+    } catch {
+      return {}
+    }
+  }
 
-  /** 串行化备份/恢复的文件写操作。 */
-  private restoreQueue: Promise<void> = Promise.resolve()
+  /** 本地「今天」已做过补丁备份的日期键；跨天第一次写前自动备份一次。 */
+  private patchBackupDay: string | null = null
 
   /** 把覆盖表原子化写入 catalog.json（目录缺失时创建）。 */
   private writeOverrides(overrides: CatalogOverrides): void {
     mkdirSync(dirname(overridesPath()), { recursive: true })
-    writeFileSync(overridesPath(), JSON.stringify(overrides, null, 2) + '\n', 'utf8')
+    writeFileAtomic(overridesPath(), JSON.stringify(overrides, null, 2) + '\n')
+  }
+
+  /**
+   * 写全局补丁文件（评估 P0-1/P0-2）：跨天首次写前自动备份（滚动保留
+   * PATCH_BACKUP_KEEP 份），写前 YAML 回读校验，临时文件 + rename 原子替换。
+   */
+  private writePatchFile(path: string, content: string): void {
+    assertWritablePatchYaml(content)
+    const day = localDayKey(new Date())
+    if (this.patchBackupDay !== day) {
+      try {
+        createTimestampedBackup(path, new Date())
+        pruneBackups(path, PATCH_BACKUP_KEEP)
+        this.patchBackupDay = day
+      } catch {
+        // 备份失败不阻断写盘；保持未备份状态，下次写前重试。
+      }
+    }
+    writeFileAtomic(path, content)
   }
 
   /** 保存一个模块的覆盖：空字段视为清除；两字段皆空则移除整条覆盖。 */
@@ -200,11 +309,14 @@ export class PluginManagerGateway extends TypertRemoteService {
         if (typeof moduleName !== 'string' || moduleName.length === 0) {
           return { accepted: false, reason: 'invalid-input', message: '模块名不能为空' }
         }
-        const overrides = readOverrides()
+        if (moduleName.length > MAX_MODULE_NAME_CHARS) return tooLong('moduleName')
+        const overrides = readOverrides().overrides
         const next: CatalogOverrides = { ...overrides }
         const entry: CatalogOverrides[string] = {}
         const trimmedName = (name ?? '').trim()
         const trimmedDesc = (desc ?? '').trim()
+        if (trimmedName.length > MAX_OVERRIDE_NAME_CHARS) return tooLong('name')
+        if (trimmedDesc.length > MAX_OVERRIDE_DESC_CHARS) return tooLong('desc')
         if (trimmedName.length > 0) entry.name = trimmedName
         if (trimmedDesc.length > 0) entry.desc = trimmedDesc
         if (entry.name === undefined && entry.desc === undefined) {
@@ -222,8 +334,8 @@ export class PluginManagerGateway extends TypertRemoteService {
         }
       }
     }
-    const queued = this.overrideQueue.then(run, run)
-    this.overrideQueue = queued.then(() => {}, () => {})
+    const queued = this.writeQueue.then(run, run)
+    this.writeQueue = queued.then(() => {}, () => {})
     return queued
   }
 
@@ -235,7 +347,8 @@ export class PluginManagerGateway extends TypertRemoteService {
         if (typeof moduleName !== 'string' || moduleName.length === 0) {
           return { accepted: false, reason: 'invalid-input', message: '模块名不能为空' }
         }
-        const overrides = readOverrides()
+        if (moduleName.length > MAX_MODULE_NAME_CHARS) return tooLong('moduleName')
+        const overrides = readOverrides().overrides
         if (!Object.prototype.hasOwnProperty.call(overrides, moduleName)) {
           return { accepted: true }
         }
@@ -251,8 +364,34 @@ export class PluginManagerGateway extends TypertRemoteService {
         }
       }
     }
-    const queued = this.overrideQueue.then(run, run)
-    this.overrideQueue = queued.then(() => {}, () => {})
+    const queued = this.writeQueue.then(run, run)
+    this.writeQueue = queued.then(() => {}, () => {})
+    return queued
+  }
+
+  /**
+   * 把损坏的覆盖文件改名保存（评估 P1-2）：catalog.json → catalog.json.corrupt-<时间戳>.json。
+   * 内容留在磁盘上可人工找回；改名后 list() 不再报读取失败。
+   */
+  @Remote('quarantineOverrides')
+  quarantineOverrides(): Promise<CatalogRepairResult> {
+    const run = async (): Promise<CatalogRepairResult> => {
+      try {
+        const path = overridesPath()
+        if (!existsSync(path)) return { accepted: true }
+        const movedTo = `${path}.corrupt-${stampOf(new Date())}.json`
+        renameSync(path, movedTo)
+        return { accepted: true, movedTo }
+      } catch (error) {
+        return {
+          accepted: false,
+          reason: 'io-error',
+          message: error instanceof Error ? error.message : String(error),
+        }
+      }
+    }
+    const queued = this.writeQueue.then(run, run)
+    this.writeQueue = queued.then(() => {}, () => {})
     return queued
   }
 
@@ -284,10 +423,19 @@ export class PluginManagerGateway extends TypertRemoteService {
     return undefined
   }
 
+  /** 检测官方插件管理器行是否仍被加载（评估 P1-5）：并存说明本插件未按预期接管。 */
+  private detectCompatibilityWarning(): string | undefined {
+    for (const entry of this.ctx.loader.entries()) {
+      if (entry.options.name === OFFICIAL_PLUGIN_MANAGER) return COMPAT_OFFICIAL_COEXISTS
+    }
+    return undefined
+  }
+
   /** 当前 Loader 行快照 + 目录信息。 */
   @Remote('list')
   list(): PluginManagerSnapshot {
-    const overrides = readOverrides()
+    const { overrides, warning } = readOverrides()
+    const declaredDeps = this.profileDependencies()
     const entries: PluginManagerEntry[] = []
     let enabledCount = 0
     for (const entry of this.ctx.loader.entries()) {
@@ -303,26 +451,38 @@ export class PluginManagerGateway extends TypertRemoteService {
       const fiberPhase: PluginManagerFiberPhase = entry.fiber === undefined
         ? null
         : FIBER_PHASE[entry.fiber.state as number] ?? null
+      // 英文环境显示名/说明（评估 P2-9）：用户覆盖两种语言下都生效（用户数据优先），
+      // 其次取内置英文目录，最后回退英文短名/英文兜底说明——不把中文内容暴露给英文用户。
+      const shortName = moduleShortName(moduleName)
       entries.push({
         entryId: entry.id,
         moduleName,
         enabled,
         fiberPhase,
-        displayName: override?.name ?? catalog?.name ?? moduleShortName(moduleName),
+        displayName: override?.name ?? catalog?.name ?? shortName,
         description: override?.desc ?? catalog?.desc ?? FALLBACK_DESC,
+        displayNameEn: override?.name ?? catalog?.nameEn ?? shortName,
+        descriptionEn: override?.desc ?? catalog?.descEn ?? FALLBACK_DESC_EN,
         category: catalog?.category ?? OTHER_CATEGORY,
         system,
         toggleable: !system && !expressionManaged,
         toggleBlockReason: system ? 'system' : expressionManaged ? 'expression' : null,
         hasOverride: override !== undefined,
+        local: isLocalModule(moduleName),
+        declared: isDeclaredDependency(declaredDeps, moduleName),
+        official: isOfficialModule(moduleName),
       })
     }
+    const compatibility = this.detectCompatibilityWarning()
     return {
       patchFile: globalPatchPath(),
       overridesFile: overridesPath(),
       entryCount: entries.length,
       enabledCount,
       entries,
+      categoryLabels: CATEGORY_LABELS,
+      ...(warning === undefined ? {} : { overridesWarning: warning }),
+      ...(compatibility === undefined ? {} : { compatibilityWarning: compatibility }),
     }
   }
 
@@ -337,14 +497,21 @@ export class PluginManagerGateway extends TypertRemoteService {
     if (guarded !== undefined) return Promise.resolve(guarded)
 
     const patchId = this.patchIdOf(entryId)
+    /** 无法识别行的拒绝结果（评估 P0-2：防静默追加重复行）。 */
+    const unrecognized = (): SetEnabledResult => ({
+      accepted: false,
+      reason: 'unrecognized',
+      message: '补丁文件里已存在该插件行，但行格式无法识别（行块首键必须是 id）；为避免写入重复行已拒绝本次操作，请手工检查 cordis.patch.yml',
+    })
     const run = async (): Promise<SetEnabledResult> => {
       const path = globalPatchPath()
       try {
-        let content = tryRead(path) ?? initialPatchFile()
+        const content = tryRead(path) ?? initialPatchFile()
         let edited = setRowDisabled(content, patchId, enabled)
         if (edited.blocked === 'expression') {
           return { accepted: false, reason: 'expression', message: '该插件由 !!js 表达式控制启停，请直接编辑配置文件' }
         }
+        if (edited.blocked === 'unrecognized') return unrecognized()
         if (edited.changed) {
           // 写前重读一次：外部手工编辑与我们并发时，在最新内容上重做合并，避免丢更新。
           const current = tryRead(path)
@@ -353,8 +520,9 @@ export class PluginManagerGateway extends TypertRemoteService {
             if (edited.blocked === 'expression') {
               return { accepted: false, reason: 'expression', message: '该插件由 !!js 表达式控制启停，请直接编辑配置文件' }
             }
+            if (edited.blocked === 'unrecognized') return unrecognized()
           }
-          writeFileSync(path, edited.content, 'utf8')
+          this.writePatchFile(path, edited.content)
         }
         return { accepted: true }
       } catch (error) {
@@ -366,9 +534,51 @@ export class PluginManagerGateway extends TypertRemoteService {
       }
     }
 
-    const queued = this.toggleQueue.then(run, run)
-    this.toggleQueue = queued.then(() => {}, () => {})
+    const queued = this.writeQueue.then(run, run)
+    this.writeQueue = queued.then(() => {}, () => {})
     return queued
+  }
+
+  /**
+   * 导入预览（评估 P1-3）：解析备份并与当前状态逐项比对，返回将翻转的启停行、
+   * 将新增/覆盖的依赖、将追加的 bundles 与备注清单——只读，不写任何文件。
+   * 界面先展示预览，用户确认后才调用 importBackup 真正写入。
+   */
+  @Remote('previewBackup')
+  previewBackup(json: string): BackupPreviewResult {
+    try {
+      if (typeof json !== 'string' || json.length === 0) {
+        return { accepted: false, reason: 'invalid-format', message: '备份内容为空' }
+      }
+      if (json.length > MAX_IMPORT_JSON_CHARS) {
+        return { accepted: false, reason: 'too-large', message: '备份文件过大（上限 2MB）' }
+      }
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(json)
+      } catch {
+        return { accepted: false, reason: 'invalid-format', message: '备份文件不是合法的 JSON' }
+      }
+      const validation = validateBackupDocument(parsed)
+      if (!validation.ok) {
+        return { accepted: false, reason: 'invalid-format', message: validation.reason }
+      }
+      const profileDir = this.profileDir()
+      if (profileDir === undefined) {
+        return { accepted: false, reason: 'profile-not-found', message: '无法定位当前 profile 目录（缺少 package.json）' }
+      }
+      const manifest = readProfileManifest(join(profileDir, 'package.json'))
+      const preview = buildBackupPreview({
+        currentOverrides: readOverrides().overrides,
+        currentDependencies: manifest.dependencies ?? {},
+        currentBundles: manifest.dsh?.profile?.bundles ?? [],
+        currentPatchFile: tryRead(globalPatchPath()),
+        document: validation.document,
+      })
+      return { accepted: true, preview }
+    } catch (error) {
+      return { accepted: false, reason: 'io-error', message: error instanceof Error ? error.message : String(error) }
+    }
   }
 
   /** 导出备份：备注覆盖 + profile 依赖/bundles + 全局启停补丁。 */
@@ -382,7 +592,7 @@ export class PluginManagerGateway extends TypertRemoteService {
       const manifest = readProfileManifest(join(profileDir, 'package.json'))
       const document = buildBackupDocument({
         profile: basename(profileDir),
-        overrides: readOverrides(),
+        overrides: readOverrides().overrides,
         dependencies: manifest.dependencies ?? {},
         bundles: manifest.dsh?.profile?.bundles ?? [],
         patchFile: tryRead(globalPatchPath()),
@@ -393,11 +603,26 @@ export class PluginManagerGateway extends TypertRemoteService {
     }
   }
 
-  /** 导入备份：恢复备注 + profile 依赖/bundles + 全局启停补丁（合并，保留当前独有条目）。 */
+  /**
+   * 导入备份（评估 P0-3 两阶段）：恢复备注 + profile 依赖/bundles + 全局启停补丁
+   * （合并语义，保留当前独有条目）。
+   *
+   * - `allowNonRegistrySpecs` 为 null（首次调用）：只解析与安全审计。若备份含非常规
+   *   依赖（git/file/URL 等），返回 confirmation-required 与逐条清单，**不写任何文件**；
+   *   全部依赖均为 registry 风格时直接执行写入。
+   * - 传确认清单（用户勾选后重调）：执行写入；清单外的非常规依赖被跳过，
+   *   并以 detail.nonRegistrySkipped 报告条数。
+   */
   @Remote('importBackup')
-  importBackup(json: string): Promise<BackupImportResult> {
+  importBackup(json: string, allowNonRegistrySpecs: readonly string[] | null): Promise<BackupImportResult> {
     const run = async (): Promise<BackupImportResult> => {
       try {
+        if (typeof json !== 'string' || json.length === 0) {
+          return { accepted: false, reason: 'invalid-format', message: '备份内容为空' }
+        }
+        if (json.length > MAX_IMPORT_JSON_CHARS) {
+          return { accepted: false, reason: 'too-large', message: '备份文件过大（上限 2MB）' }
+        }
         let parsed: unknown
         try {
           parsed = JSON.parse(json)
@@ -415,15 +640,26 @@ export class PluginManagerGateway extends TypertRemoteService {
           return { accepted: false, reason: 'profile-not-found', message: '无法定位当前 profile 目录（缺少 package.json）' }
         }
 
+        // 依赖安全审计：非常规 spec 必须经用户逐项确认（或确认后跳过），绝不静默合并。
+        const audit = auditDependencySpecs(doc.dependencies, allowNonRegistrySpecs)
+        if (allowNonRegistrySpecs === null && audit.pending.length > 0) {
+          return {
+            accepted: false,
+            reason: 'confirmation-required',
+            message: `备份包含 ${audit.pending.length} 个非常规依赖来源（本地路径 / 外部仓库等），安装时会执行其携带的代码，需逐项确认后才会写入`,
+            pendingNonRegistrySpecs: audit.pending,
+          }
+        }
+
         // 1) 备注覆盖
-        const overrides = readOverrides()
+        const overrides = readOverrides().overrides
         const overMerged = mergeOverrides(overrides, doc.overrides)
         this.writeOverrides(overMerged.merged)
 
-        // 2) profile 清单：依赖 + bundles
+        // 2) profile 清单：依赖（仅 registry 风格 + 已确认条目）+ bundles
         const manifestPath = join(profileDir, 'package.json')
         const manifest = readProfileManifest(manifestPath)
-        const depsMerged = mergeDependencies(manifest.dependencies ?? {}, doc.dependencies)
+        const depsMerged = mergeDependencies(manifest.dependencies ?? {}, audit.writable)
         const bundlesMerged = mergeBundles(manifest.dsh?.profile?.bundles ?? [], doc.bundles)
         writeProfileManifest(manifestPath, {
           ...manifest,
@@ -437,23 +673,14 @@ export class PluginManagerGateway extends TypertRemoteService {
           },
         })
 
-        // 3) 全局启停补丁（合并：按行应用备份里的启停状态，保留当前其余行）
+        // 3) 全局启停补丁（合并：按行应用备份里的启停状态，保留当前其余行；
+        //    与 previewBackup 共用 mergePatchRows，保证预览与实际写入一致）
         let patchRowsRestored = 0
         if (doc.patchFile !== undefined) {
           const patchPath = globalPatchPath()
-          let content = tryRead(patchPath) ?? initialPatchFile()
-          for (const row of parsePatchFile(doc.patchFile)) {
-            if (row.id === null || row.disabledValue === null) continue
-            if (isExpression(row.disabledValue)) continue
-            const enabled = row.disabledValue !== 'true'
-            const edited = setRowDisabled(content, row.id, enabled)
-            if (edited.blocked === 'expression') continue
-            if (edited.changed) {
-              content = edited.content
-              patchRowsRestored += 1
-            }
-          }
-          if (patchRowsRestored > 0) writeFileSync(patchPath, content, 'utf8')
+          const merged = mergePatchRows(tryRead(patchPath) ?? initialPatchFile(), doc.patchFile)
+          patchRowsRestored = merged.rows.length
+          if (patchRowsRestored > 0) this.writePatchFile(patchPath, merged.content)
         }
 
         const profileName = basename(profileDir)
@@ -464,6 +691,7 @@ export class PluginManagerGateway extends TypertRemoteService {
             dependenciesRestored: depsMerged.changed,
             bundlesRestored: bundlesMerged.changed,
             patchRowsRestored,
+            nonRegistrySkipped: audit.pending.length,
           },
           installCommand: `dsh plugin --profile ${profileName} install`,
           restartRequired: true,
@@ -472,8 +700,8 @@ export class PluginManagerGateway extends TypertRemoteService {
         return { accepted: false, reason: 'io-error', message: error instanceof Error ? error.message : String(error) }
       }
     }
-    const queued = this.restoreQueue.then(run, run)
-    this.restoreQueue = queued.then(() => {}, () => {})
+    const queued = this.writeQueue.then(run, run)
+    this.writeQueue = queued.then(() => {}, () => {})
     return queued
   }
 }

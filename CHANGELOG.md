@@ -2,6 +2,153 @@
 
 All notable changes to dsh-plugin-manager are documented here.
 
+## [Unreleased]
+
+Origin filtering and source badges from [issue #1](https://github.com/2768651338/dsh-plugin-manager/issues/1).
+
+- **Origin filter with "installed" as the default view (issue #1).** The tab now
+  has an origin dropdown next to the category one: All / Installed / Built-in /
+  Community. It defaults to **Installed** so the user's own plugins are visible
+  immediately instead of drowning in ~170 built-in rows; the choice is persisted
+  in localStorage and restored on the next visit. If that view is empty, an
+  inline "Show all {count} plugins" button offers a one-click way back.
+- **Source badges derived from two signals (issue #1).** Each snapshot entry now
+  carries `declared` (the module appears in the profile's `package.json`
+  dependencies — the user-installed signal, including `file:` specs) and
+  `official` (an `@deepseek-ai/*` or `@cordis/*` module). Cards show a
+  Built-in / Official / Community badge accordingly; `file:` rows keep their
+  existing Local badge. A module installed by the user is classified as
+  Installed regardless of who maintains it — the four labels requested in the
+  issue overlap, so "official but extra-install" plugins are not split out as a
+  separate class (they are indistinguishable from built-ins in the loader tree);
+  the Official badge still identifies them.
+- **Graceful degradation for stale clients (issue #1).** Snapshots from an old
+  host build carry no origin fields; the tab then falls back to the All view
+  instead of misclassifying every row as community. The derivation helpers live
+  in a new pure module `src/origin.ts` (`tests/origin.smoke.mjs`) with the
+  filter/badge logic in `src/client/util.ts` (covered by
+  `tests/client-util.smoke.mjs`) and end-to-end assertions in
+  `tests/host-gateway.e2e.mjs`.
+
+P2 fixes from the 2026-10-01 evaluation ([`docs/evaluation-2026-10-01.md`](docs/evaluation-2026-10-01.md)).
+
+- **Bilingual catalog (P2-9).** All 195 built-in entries gained English
+  `nameEn` / `descEn` fields. In an English UI the tab shows English names and
+  descriptions — when an entry has no English text it falls back to the module
+  short name + an English placeholder note instead of Chinese, so English users
+  no longer see mixed Chinese content. User-written overrides apply in both
+  languages (user data wins). Search now matches both languages.
+- **Category labels ship with the snapshot (P2-7).** `list()` now carries
+  `categoryLabels` (zh/en per category) so the catalog owns its naming in one
+  place; the tab's duplicated label map is gone.
+- **Server-side input limits (P2-8).** `setOverride` / `removeOverride` enforce
+  module-name ≤ 200, name ≤ 200 and description ≤ 1000 characters with a clear
+  `invalid-input` message — the client's `maxLength` is only politeness, the
+  server limit is the limit (the backup `json` 2MB cap and change-based restore
+  counting landed earlier with P0-3/P1-3).
+- **`file:`-installed rows show a readable name (P2-5).** Modules loaded from a
+  `file://` URL collapse to the basename without extension (e.g. `noop`) instead
+  of the full path, and carry a "Local" badge on the card.
+- **Toggle refresh polls instead of gambling (P2-1).** After a toggle the tab
+  refreshes on a 300 ms / 900 ms / 2000 ms ladder until the row's `enabled`
+  matches the request and the fiber phase settles — three refreshes max, stop on
+  hit, no infinite retry. This replaces the single fixed 900 ms refresh.
+- **"Nothing to change" is its own message (P2-6).** Re-importing a backup whose
+  content is already in place now reports the no-change wording instead of
+  "Restored: 0 notes, 0 deps, 0 plugins, 0 rows".
+- **Shared schema source for both typert artifacts (P2-2).** `remote.ts` and
+  `typert-host.ts` import their zod schemas and `strictCodec` from a new
+  `src/schemas.ts`, removing the ~90-line duplicated block that had to be edited
+  in two places (and could drift). Descriptor shapes stay generator-aligned.
+- **Browser-half pure functions under test (P2-4).** `format` / `dateStamp` /
+  `matches` / `fiberPhaseSettled` moved to `src/client/util.ts` with a new
+  `tests/client-util.smoke.mjs` (same zero-dependency style as the other smokes).
+- **ESLint + CI (P2-3).** Flat-config `eslint` + `typescript-eslint` (lenient,
+  defect-oriented rules) with `pnpm lint`, and a GitHub Actions workflow running
+  lint + typecheck + build + test on node 22/24 for every push and PR
+  (node 20 is below tsdown 0.22's floor, so the matrix starts at 22).
+
+P0 hardening from the 2026-10-01 evaluation ([`docs/evaluation-2026-10-01.md`](docs/evaluation-2026-10-01.md)).
+
+- **Atomic writes everywhere + automatic patch backups (P0-1).** All three
+  write sites (`cordis.patch.yml`, `catalog.json`, the profile `package.json`)
+  now go through temp-file + `rename` (temp file is fsynced first). On Windows,
+  when the target is briefly locked (editor/antivirus), the rename retries and
+  finally degrades to a plain overwrite instead of failing the toggle. Before
+  the first patch-file write of each day, a timestamped `cordis.patch.yml.<stamp>.bak`
+  copy is created automatically (newest 5 kept, older ones pruned).
+- **YAML re-validation before every patch write (P0-2).** The hand-rolled line
+  editor's output is now parsed with a real YAML parser before hitting disk;
+  invalid content is refused with a readable error. The parser runs a custom
+  safe schema that accepts `!!js/*` tags as opaque scalars — expressions are
+  **never** evaluated during validation. Two silent-corruption paths are also
+  closed: a target row whose `id` is not the block's first key (multi-line
+  hand-written form) is now rejected as `unrecognized` instead of appending a
+  duplicate row that would never take effect, and inline comments
+  (`disabled: true # note`) survive rewrites instead of being destroyed.
+- **Backup import no longer trusts arbitrary dependency specs (P0-3).**
+  `importBackup` is now two-phase: called with `allowNonRegistrySpecs = null`
+  it only parses/audits and — if the backup contains non-registry specs
+  (`git:`, `file:`, `npm:` aliases, `workspace:`, URLs/tarballs, scp paths,
+  GitHub shorthand `user/repo#ref`, local paths) — returns
+  `confirmation-required` with the itemized list **without writing anything**.
+  The UI shows a per-item checklist (unchecked entries are skipped and reported
+  via `detail.nonRegistrySkipped`); registry-style specs (semver/ranges/dist-tags)
+  still import in a single call. The `json` argument is capped at 2MB.
+- `js-yaml` moved from devDependencies to **runtime dependencies** (the host
+  profile resolves it from the plugin's own `node_modules`); `@types/js-yaml`
+  added for development.
+- New smoke tests (`patch-yaml`, `fs-safe`) and extended `patch-file`/`backup`
+  smokes plus e2e coverage for the rejection paths and the two-phase import.
+
+P1 fixes from the same evaluation.
+
+- **One global write queue (P1-1).** Toggle, notes editing, backup import and
+  the corrupt-file rescue now share a single serialized write queue. The three
+  previously independent queues did not know about each other, so concurrent
+  operations touching the same file (e.g. a toggle landing mid-import) could
+  overwrite each other and silently drop updates.
+- **Broken override files are reported, not swallowed (P1-2).** When
+  `catalog.json` exists but cannot be read or parsed, `list()` carries an
+  `overridesWarning` and the tab shows a banner explaining that the custom
+  notes are still on disk (nothing was deleted) — with a one-click
+  **rename the broken file aside** rescue
+  (`catalog.json.corrupt-<timestamp>.json`) so the tab recovers immediately.
+- **Backup import previews before writing (P1-3).** New `previewBackup`
+  endpoint diffs a backup against the current state — notes to add/overwrite,
+  dependencies to add/update, bundles to append, toggle rows to flip — without
+  touching any file. The tab renders this as a review panel (the non-registry
+  dependency checklist from P0-3 is merged into it) and only calls
+  `importBackup` after confirmation. Preview and import share the same row
+  merge function, so the review matches what actually gets written, and
+  restore counters now only count real changes (identical entries no longer
+  inflate the "restored N notes" message).
+- **Toggles that did not take effect are explained (P1-4).** After a toggle,
+  the client reconciles the refreshed snapshot against the request (with one
+  extra re-check for slow HMR before concluding). If the state still
+  contradicts the request, the card message explains the row may also be
+  controlled by a profile-layer patch or another config layer and points at
+  the global patch file — instead of a generic "click refresh" hint.
+- **Runtime detection of official-manager coexistence (P1-5).** `list()`
+  flags the snapshot with `compatibilityWarning` when the official
+  `@deepseek-ai/dsh-plugin-manager` host row is still loaded alongside this
+  plugin (i.e. the bundle-patch takeover did not happen as expected); the tab
+  shows a compatibility banner instead of failing silently.
+- **Undo for disable (P1-6).** Disabling a plugin now opens a 9-second
+  in-card **Undo** window instead of an instant no-confirm change; undo
+  re-invokes `setEnabled` and the copy makes clear it restores the
+  configuration (the hot reload still applies).
+- **Security model documented (P1-7).** The README gains a "Security model"
+  paragraph: the plugin ships no authentication of its own, reachability of
+  the write operations is decided by DSH's trust barrier, and the web server
+  must not be exposed on non-loopback addresses in untrusted networks. The
+  tab footer shows a matching security hint line; all language READMEs note
+  the same.
+- Tests: backup smoke now 14 groups (preview diff, row merge incl. expression/
+  unrecognized/no-op handling, change-based override counting); host-gateway
+  e2e covers the new snapshot warning fields, the quarantine rescue, and
+  preview→confirm→import consistency (no writes during preview).
+
 ## [0.7.0] — 2026-10-01
 
 - **Adapt to DSH 0.2.0** (verified against the `0.2.0-rc.2` package set) while
