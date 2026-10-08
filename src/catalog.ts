@@ -21,7 +21,7 @@ export interface CatalogEntry {
   readonly category: string
 }
 
-export type PluginCategory = 'core' | 'llm' | 'session' | 'agent' | 'tool' | 'skill' | 'ui' | 'web' | 'sandbox' | 'storage' | 'external' | 'other'
+export type PluginCategory = 'core' | 'llm' | 'session' | 'agent' | 'tool' | 'skill' | 'ui' | 'web' | 'sandbox' | 'storage' | 'other'
 
 /** 分类的双语标签（评估 P2-7：随 list() 快照下发，界面按当前语言取用）。 */
 export const CATEGORY_LABELS: Record<PluginCategory, { zh: string; en: string }> = {
@@ -35,7 +35,6 @@ export const CATEGORY_LABELS: Record<PluginCategory, { zh: string; en: string }>
   web: { zh: 'Web 服务', en: 'Web services' },
   sandbox: { zh: '沙箱与安全', en: 'Sandbox & security' },
   storage: { zh: '存储', en: 'Storage' },
-  external: { zh: '第三方插件', en: 'Third-party plugins' },
   other: { zh: '其它', en: 'Other' },
 }
 
@@ -171,7 +170,8 @@ export const CATALOG: Readonly<Record<string, CatalogEntry>> = {
   ["@deepseek-ai/dsh-client-ui-trajectory"]: { name: "轨迹视图", desc: "交互式时序轨迹事件总览", nameEn: "Trajectory view", descEn: "Interactive chronological overview of trajectory events", category: "ui" as PluginCategory },
   ["@deepseek-ai/dsh-agent-presets"]: { name: "Agent 预设引擎", desc: "按预设 cordis.yml 组合每个会话的 Agent", nameEn: "Agent preset engine", descEn: "Composes each session's agent from preset cordis.yml", category: "agent" as PluginCategory },
   // ===== PerryLink 插件中文名/描述（数据源：PerryLink/dsh-catalog data/packages.json + 各仓库 README/npm registry 实测）=====
-  // 键 = 模块名（npm 包名，即 cordis 行 name）；category 按功能分组（维护者可整组改 external）。
+  // 键 = 模块名（npm 包名，即 cordis 行 name）；category 一律按功能分组，
+  // 官方/社区归属由 scope 推断（src/origin.ts），不占用分类维度。
   ["dsh-auto-review"]: { name: "自动审查", desc: "审批链上的第二模型自动审查：只读 reviewer 子代理给出 allow/deny 结构化判定，默认 fail-closed，全程会话日志可审计。", nameEn: "Auto review", descEn: "Second-model review on the approval chain: a read-only reviewer subagent returns structured allow/deny verdicts, fail-closed by default, fully auditable in the session log.", category: "agent" as PluginCategory },
   ["dsh-permission-rules"]: { name: "权限规则", desc: "声明式有序 allow/deny/ask 权限规则：匹配工具名、参数（glob/正则）、工作区路径与网络目标（域名/IP/端口/协议），外加 Codex 风格进程级网络策略。", nameEn: "Permission rules", descEn: "Declarative ordered allow/deny/ask rules matching tool names, arguments (glob/regex), workspace paths and network targets (domain/IP/port/protocol), plus Codex-style process-level network policies.", category: "sandbox" as PluginCategory },
   ["dsh-doublecheck"]: { name: "双重校验", desc: "交付质量门：动笔前审讯需求、红绿测试证据、交付后对抗评审，最终给出 deliverable/rework 放行判定。", nameEn: "Double check", descEn: "Delivery quality gate: interrogates requirements before work starts, requires red/green test evidence, runs an adversarial review after delivery, and issues a deliverable/rework verdict.", category: "tool" as PluginCategory },
@@ -211,7 +211,7 @@ export const CATALOG: Readonly<Record<string, CatalogEntry>> = {
   ["dsh-reach"]: { name: "触达", desc: "多通道决策与遥控桥：审批/提问卡片镜像到 IM（微信 iLink、Telegram、飞书），#token 稳定 id，聊天内直接应答。", nameEn: "Reach", descEn: "Multi-channel decision and remote-control bridge: mirrors approval/question cards to IM (WeChat iLink, Telegram, Feishu), stable #token ids, replies directly from chat.", category: "tool" as PluginCategory },
   ["dsh-autotier"]: { name: "自动分档", desc: "强/便宜模型分档路由：意图门控落档、计划模式交接（强档规划便宜档执行）、工具/执行前高危守卫、TTL 回退。", nameEn: "Auto tiering", descEn: "Strong/cheap model tier routing: intent-gated tier assignment, plan-mode handoff (strong tier plans, cheap tier executes), pre-tool/pre-execution danger guards and TTL fallback.", category: "llm" as PluginCategory },
   // dsh-plugin-upgrade: skip (not in master table)；dsh-plugin-upgrade-rc1 为一次性历史迁移包，不入目录
-  ["@dsh-external/dsh-navbar"]: { name: "对话导航条", desc: "对话区右缘的消息节点导航（第三方插件）", nameEn: "Conversation scrollbar", descEn: "Message-node navigation on the right edge of the conversation area (third-party plugin)", category: "external" as PluginCategory },
+  ["@dsh-external/dsh-navbar"]: { name: "对话导航条", desc: "对话区右缘的消息节点导航（第三方插件）", nameEn: "Conversation scrollbar", descEn: "Message-node navigation on the right edge of the conversation area (third-party plugin)", category: "ui" as PluginCategory },
   // ===== DSH 0.2.0 新增/拆分的内置行（数据源：0.2.0-rc.2 dsh-base / dsh-web-app 捆绑补丁 + 各包 package.json description）=====
   ["@deepseek-ai/dsh-hmr"]: { name: "热加载驱动（0.2.0+）", desc: "协调模块与 profile 配置的热重载（0.2.0 起替代 cordis-plugin-hmr，监听全局与 profile 补丁文件）", nameEn: "Hot reload driver (0.2.0+)", descEn: "Coordinates hot reload for modules and profile config (replaces cordis-plugin-hmr in 0.2.0; watches global and profile patch files)", category: "core" as PluginCategory },
   ["@deepseek-ai/dsh-settings"]: { name: "设置服务", desc: "用户设置缝（ctx.settings）：设置文档读取与命名空间作用域", nameEn: "Settings service", descEn: "User settings seam (ctx.settings): settings document reads and namespace scoping", category: "core" as PluginCategory },
