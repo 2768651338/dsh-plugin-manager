@@ -2,7 +2,7 @@
 
 All notable changes to dsh-plugin-manager are documented here.
 
-## [Unreleased]
+## [0.8.0] — 2026-10-09
 
 Origin filtering and source badges from [issue #1](https://github.com/2768651338/dsh-plugin-manager/issues/1).
 
@@ -29,6 +29,13 @@ Origin filtering and source badges from [issue #1](https://github.com/2768651338
   filter/badge logic in `src/client/util.ts` (covered by
   `tests/client-util.smoke.mjs`) and end-to-end assertions in
   `tests/host-gateway.e2e.mjs`.
+- **`external` category retired.** With attribution now carried by the origin
+  signal alone, keeping a second "third-party" axis in the category list was
+  redundant: the last entry using it (`@dsh-external/dsh-navbar`) moved to
+  `ui`, the value is gone from `PluginCategory` / `CATEGORY_LABELS`, and the
+  category axis is purely functional. Client-side rendering of unknown
+  categories already falls back to the raw key, so override files (which never
+  carried categories) are unaffected.
 
 P2 fixes from the 2026-10-01 evaluation ([`docs/evaluation-2026-10-01.md`](docs/evaluation-2026-10-01.md)).
 

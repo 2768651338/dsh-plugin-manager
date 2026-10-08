@@ -1,7 +1,7 @@
 {
   "name": "@txc2768651338/dsh-plugin-manager",
   "description": "插件管家——图形化插件管理：中文名与用途说明目录 + 一键启停（写入全局 cordis.patch.yml，实时热生效）",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "packageManager": "pnpm@10.34.5",
   "main": "lib/index.js",
